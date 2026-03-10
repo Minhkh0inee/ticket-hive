@@ -1,0 +1,131 @@
+aversion: '3.8'
+
+services:
+  # ── Redis ───────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: tickethive_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tickethive-network
+
+  # ── Elasticsearch ───────────────────────────
+  elasticsearch:
+    image: elasticsearch:8.11.0
+    container_name: tickethive_elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - '9200:9200'
+      - '9300:9300'
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -f http://localhost:9200/_cluster/health || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - tickethive-network
+
+  # ── RabbitMQ ────────────────────────────────
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: tickethive_rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'ping']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - tickethive-network
+
+  # ── NestJS API ──────────────────────────────
+  api:
+    build:
+      context: ./packages/api
+      dockerfile: Dockerfile.dev
+    container_name: tickethive_api
+    restart: unless-stopped
+    ports:
+      - '8080:8080'
+    volumes:
+      - ./packages/api/src:/app/src
+    env_file:
+      - .env
+    depends_on:
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - tickethive-network
+
+  # ── NestJS Worker ───────────────────────────
+  worker:
+    build:
+      context: ./packages/worker
+      dockerfile: Dockerfile.dev
+    container_name: tickethive_worker
+    restart: unless-stopped
+    volumes:
+      - ./packages/worker/src:/app/src
+    env_file:
+      - .env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - tickethive-network
+
+  # ── React Frontend ──────────────────────────
+  frontend:
+    build:
+      context: ./packages/frontend
+      dockerfile: Dockerfile.dev
+    container_name: tickethive_frontend
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./packages/frontend/src:/app/src
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8080
+      - VITE_ENABLE_MSW=true
+    networks:
+      - tickethive-network
+
+# ── Volumes ─────────────────────────────────
+volumes:
+  redis_data:
+  elasticsearch_data:
+  rabbitmq_data:
+
+# ── Networks ─────────────────────────────────
+networks:
+  tickethive-network:
+    driver: bridge
