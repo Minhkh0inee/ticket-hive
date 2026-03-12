@@ -1,5 +1,3 @@
-aversion: '3.8'
-
 services:
   # ── Redis ───────────────────────────────────
   redis:
@@ -110,7 +108,7 @@ services:
     container_name: tickethive_frontend
     restart: unless-stopped
     ports:
-      - '3000:3000'
+      - '5173:5173'
     volumes:
       - ./packages/frontend/src:/app/src
     environment:
