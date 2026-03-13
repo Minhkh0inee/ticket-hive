@@ -12,13 +12,17 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: process.env.NODE_ENV === 'production' ? '.env.production' : '.env',
+    }),
     TypeOrmModule.forRoot({
       type: 'postgres',
       url: process.env.DATABASE_URL,
       ssl: { rejectUnauthorized: false },
       synchronize: false,
       migrations: ['src/database/migrations/*-migration.ts'],
+      logging: process.env.NODE_ENV === 'development'
     }),
     AuthModule,
     EventModule,
