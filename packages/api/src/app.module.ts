@@ -21,7 +21,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       url: process.env.DATABASE_URL,
       ssl: { rejectUnauthorized: false },
       synchronize: false,
-      migrations: ['src/database/migrations/*-migration.ts'],
       logging: process.env.NODE_ENV === 'development'
     }),
     AuthModule,
