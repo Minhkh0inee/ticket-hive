@@ -1,7 +1,8 @@
-
+import { Seat } from '../../seats/entities/seats.entity';
+import { Booking } from '../../bookings/entities/bookings.entity';
 import { User } from '../../auth/entities/user.entity';
 import { AbstractEntity } from '../../common/entities/abstract.entity';
-import { Entity, Column, ManyToOne } from 'typeorm';
+import { Entity, Column, ManyToOne, OneToMany } from 'typeorm';
 
 export enum CategoryEnum {
     MUSIC = 'music',
@@ -54,4 +55,10 @@ export class Event extends AbstractEntity {
 
   @ManyToOne(() => User, (user) => user.events)
   organizer: User
+
+  @OneToMany(() => Seat, (seat) => seat.event)
+  seats: Seat[];
+
+  @OneToMany(() => Booking, (booking) => booking.event)
+  bookings: Booking[];    
 }
