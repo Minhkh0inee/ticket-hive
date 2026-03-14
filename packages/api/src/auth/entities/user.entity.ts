@@ -1,5 +1,6 @@
-import { Entity, Column } from 'typeorm';
-import { AbstractEntity } from './abstract.entity';
+import { Entity, Column, OneToMany, Index } from 'typeorm';
+import { Event } from '../../event/entities/event.entity';
+import { AbstractEntity } from '../../common/entities/abstract.entity';
 
 export enum UserRole {
     ADMIN = "admin",
@@ -18,8 +19,10 @@ export class User extends AbstractEntity {
   })
   lastName: string;
 
-  @Column({unique:true, length: 100})
+  @Index()
+  @Column({ unique: true, length: 100 })
   email: string;
+  
 
   @Column()
   passwordHash: string;
@@ -30,4 +33,7 @@ export class User extends AbstractEntity {
     default: UserRole.USER
   })
   role: UserRole
+
+  @OneToMany(() => Event, (event) => event.organizer)
+  events: Event[];
 }
