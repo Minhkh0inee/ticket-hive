@@ -1,6 +1,6 @@
 import { Seat } from '../../seats/entities/seats.entity';
 import { Booking } from '../../bookings/entities/bookings.entity';
-import { User } from '../../auth/entities/user.entity';
+import { User } from '../../users/entities/user.entity';
 import { AbstractEntity } from '../../common/entities/abstract.entity';
 import { Entity, Column, ManyToOne, OneToMany } from 'typeorm';
 

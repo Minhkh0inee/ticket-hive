@@ -2,7 +2,7 @@ import { DataSource } from 'typeorm';
 import * as dotenv from 'dotenv';
 import { join } from 'path';
 import * as bcrypt from 'bcrypt';
-import { User, UserRole } from '../../auth/entities/user.entity';
+import { User, UserRole } from '../../users/entities/user.entity';
 import { Event, CategoryEnum } from '../../event/entities/event.entity';
 import { Seat, SeatSection, SeatStatus } from '../../seats/entities/seats.entity';
 import { Booking } from '../../bookings/entities/bookings.entity';
