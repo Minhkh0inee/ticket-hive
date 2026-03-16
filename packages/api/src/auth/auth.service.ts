@@ -64,6 +64,11 @@ export class AuthService {
     return { accessToken };
   }
 
+  async logout(userId: string) {
+    await this.redisService.deleteRefreshToken(userId);
+    return { message: 'Logged out successfully' };
+  }
+
   private generateAccessToken(payload: IPayload): string {
     return this.jwtService.sign(
       { sub: payload.id, email: payload.email },
