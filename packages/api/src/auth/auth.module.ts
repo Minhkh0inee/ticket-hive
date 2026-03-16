@@ -10,6 +10,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { LocalStrategy } from './strategy/local.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './strategy/jwt.strategy';
+import { RedisModule } from 'src/redis/redis.module';
+import { RedisService } from 'src/redis/redis.service';
+import { RefreshTokenStrategy } from './strategy/refresh-token.strategy';
 
 @Module({
   imports: [TypeOrmModule.forFeature([User]),    
@@ -17,14 +20,14 @@ import { JwtStrategy } from './strategy/jwt.strategy';
     imports: [ConfigModule],
     useFactory: (config: ConfigService) => ({
       secret: config.get<string>('JWT_SECRET'),
-      signOptions: { expiresIn: '7d' },
     }),
     inject: [ConfigService],
   }),
   UsersModule,
-  PassportModule
+  PassportModule,
+  RedisModule
   ],
   controllers: [AuthController],
-  providers: [AuthService, UsersService, JwtStrategy,LocalStrategy]
+  providers: [AuthService, UsersService, JwtStrategy,LocalStrategy, RedisService, RefreshTokenStrategy]
 })
 export class AuthModule {}

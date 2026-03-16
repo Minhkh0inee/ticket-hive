@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { LoginDto, RegisterDTO } from './dto/auth.dto';
 import { LocalAuthGuard } from './guard/local.guard';
 import { JwtAuthGuard } from './guard/jwt-auth.guard';
+import { RefreshTokenGuard } from './guard/refresh-token.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -33,5 +34,11 @@ export class AuthController {
     @Get('profile')
     getProfile(@Request() req) {
       return req.user;
+    }
+
+    @UseGuards(RefreshTokenGuard)
+    @Post('refresh')
+    refresh(@Request() req) {
+    return this.authService.refresh(req.user.id, req.user.refreshToken);
     }
 }

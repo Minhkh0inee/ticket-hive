@@ -7,9 +7,10 @@ import { SeatsModule } from './seats/seats.module';
 import { BookingsModule } from './bookings/bookings.module';
 import { PaymentsModule } from './payments/payments.module';
 import { CommonModule } from './common/common.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
+import { RedisModule } from '@nestjs-modules/ioredis';
 
 @Module({
   imports: [
@@ -26,6 +27,18 @@ import { UsersModule } from './users/users.module';
       synchronize: false,
       logging: process.env.NODE_ENV === 'development'
     }),
+    RedisModule.forRootAsync({
+      useFactory: (config: ConfigService) => ({
+        type: 'single',
+        url: config.get<string>('REDIS_URL'),
+        options: {
+          tls: {
+            rejectUnauthorized: false,
+          }
+        }
+      }),
+      inject: [ConfigService],
+    }),
     AuthModule,
     EventModule,
     SeatsModule,
@@ -33,6 +46,7 @@ import { UsersModule } from './users/users.module';
     PaymentsModule,
     CommonModule,
     UsersModule,
+    RedisModule,
   ],
   controllers: [AppController],
   providers: [AppService],
