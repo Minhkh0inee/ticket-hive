@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { EventService } from './event.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
@@ -17,7 +17,6 @@ export class EventController {
 
     @Roles(UserRole.ADMIN)
     @UseGuards(JwtAuthGuard, RolesGuard)
-    @UseGuards(JwtAuthGuard)
     @Post()
     createEvent(@Body() createEventDto: CreateEventDto, @CurrentUser() user: User){
         return this.eventService.create(createEventDto, user.id)
@@ -30,24 +29,25 @@ export class EventController {
 
     
     @Get(':id')
-    getEvent(@Param('id') id: string) {
+    getEvent(@Param('id', ParseUUIDPipe) id: string) {
         return this.eventService.findEventById(id)
     }
 
     @Roles(UserRole.ADMIN)
     @UseGuards(JwtAuthGuard, RolesGuard)
-    @UseGuards(JwtAuthGuard)
     @Patch(':id')
-    async update(@Param('id') id: string, @Body() updateEventDto: UpdateEventDto) {
+    async update(@Param('id', ParseUUIDPipe) id: string, @Body() updateEventDto: UpdateEventDto) {
       return await this.eventService.update(id, updateEventDto);
     }
 
     @Roles(UserRole.ADMIN)
     @UseGuards(JwtAuthGuard, RolesGuard)
-    @UseGuards(JwtAuthGuard)
     @Delete(':id')
-    async remove(@Param('id') id: string) {
+    async remove(@Param('id', ParseUUIDPipe) id: string) {
       return await this.eventService.remove(id);
     }
+
+
+
 
 }
