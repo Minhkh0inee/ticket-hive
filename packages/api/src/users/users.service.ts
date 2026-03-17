@@ -24,11 +24,11 @@ export class UsersService {
       role: dto.role,
     });
 
-    return this.userRepo.save(user);
+    return await this.userRepo.save(user);
   }
 
   async findAll(): Promise<User[]> {
-    return this.userRepo.find();
+    return await this.userRepo.find();
   }
 
   async findOneById(id: string): Promise<User> {
@@ -38,11 +38,11 @@ export class UsersService {
   }
 
   async findOneByEmail(email: string): Promise<User | null> {
-    return this.userRepo.findOne({ where: { email } });
+    return await this.userRepo.findOne({ where: { email } });
   }
 
   async findOneByEmailWithPassword(email: string): Promise<User | null> {
-    return this.userRepo.findOne({
+    return await this.userRepo.findOne({
       where: { email },
       select: {
         id: true,
@@ -55,7 +55,7 @@ export class UsersService {
   async update(id: string, dto: UpdateUserDto): Promise<User> {
     const user = await this.findOneById(id);
     Object.assign(user, dto);
-    return this.userRepo.save(user);
+    return await this.userRepo.save(user);
   }
 
   async remove(id: string): Promise<void> {

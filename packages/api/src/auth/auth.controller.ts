@@ -4,6 +4,8 @@ import { LoginDto, RegisterDTO } from './dto/auth.dto';
 import { LocalAuthGuard } from './guard/local.guard';
 import { JwtAuthGuard } from './guard/jwt-auth.guard';
 import { RefreshTokenGuard } from './guard/refresh-token.guard';
+import { CurrentUser } from 'src/common/decorator/current-user.decorator';
+import { User } from 'src/users/entities/user.entity';
 
 @Controller('auth')
 export class AuthController {
@@ -32,8 +34,8 @@ export class AuthController {
 
     @UseGuards(JwtAuthGuard)
     @Get('profile')
-    getProfile(@Request() req) {
-      return req.user;
+    getProfile(@CurrentUser() user: User) {
+      return user;
     }
 
     @UseGuards(RefreshTokenGuard)
