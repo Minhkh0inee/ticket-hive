@@ -34,18 +34,30 @@ export class RedisService {
     return result === 'OK';
   }
 
-  async seatUnlock(
-    eventId: string,
-    seatId: string,
-    userId: string,
-  ): Promise<boolean> {
-    const owner = await this.redis.get(`seat_lock:${eventId}:${seatId}`);
-    if (owner !== userId) return false;
-    await this.redis.del(`seat_lock:${eventId}:${seatId}`);
-    return true;
+  async seatUnlock(eventId: string, seatId: string, userId: string): Promise<boolean> {
+    const script = `
+      if redis.call('get', KEYS[1]) == ARGV[1] then
+        return redis.call('del', KEYS[1])
+      else
+        return 0
+      end
+    `;
+  
+    const result = await this.redis.eval(
+      script,
+      1,
+      `seat_lock:${eventId}:${seatId}`,
+      userId,
+    );
+  
+    return result === 1;
   }
 
   async getSeatLock(eventId: string, seatId: string): Promise<string | null> {
     return this.redis.get(`seat_lock:${eventId}:${seatId}`);
+  }
+
+  async getManyLocks(keys: string[]): Promise<(string | null)[]> {
+    return this.redis.mget(...keys);
   }
 }

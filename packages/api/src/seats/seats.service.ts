@@ -1,19 +1,15 @@
 import { ConflictException, ForbiddenException, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Seat } from './entities/seats.entity';
-import { Repository } from 'typeorm';
 import { RedisService } from 'src/redis/redis.service';
 import { SeatEventDto } from './dto/seat.dto';
 
 @Injectable()
 export class SeatsService {
     constructor(
-        @InjectRepository(Seat) private readonly seatsRepo: Repository<Seat>,
         private readonly redisService: RedisService
     ){}
-    
+
     async seatLock(seatId: string, body: SeatEventDto, userId: string) {
-        const SEAT_LOCK_TTL = 5 * 60
+        const SEAT_LOCK_TTL = 10 * 60
         const {eventId} = body
         const locked = await this.redisService.seatLock(eventId, seatId, userId, SEAT_LOCK_TTL); 
         if (!locked) throw new ConflictException('Seat is already locked by another user');

@@ -47,6 +47,10 @@ export class EventController {
       return await this.eventService.remove(id);
     }
 
+    @Get(':id/seats')
+    async getEventSeats(@Param('id', ParseUUIDPipe) id: string){
+        return await this.eventService.getSeatsByEventId(id)
+    }
 
 
 
