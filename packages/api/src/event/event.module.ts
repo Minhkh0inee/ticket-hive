@@ -9,6 +9,7 @@ import { RedisService } from 'src/redis/redis.service';
 @Module({
   imports: [TypeOrmModule.forFeature([Event]), RedisModule],
   controllers: [EventController],
-  providers: [EventService, RedisService]
+  providers: [EventService, RedisService],
+  exports: [EventService]
 })
 export class EventModule {}

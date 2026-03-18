@@ -60,4 +60,9 @@ export class RedisService {
   async getManyLocks(keys: string[]): Promise<(string | null)[]> {
     return this.redis.mget(...keys);
   }
+
+  async getManySeatLocks(eventId: string, seatIds: string[]): Promise<(string | null)[]> {
+    const keys = seatIds.map((seatId) => `seat_lock:${eventId}:${seatId}`);
+    return this.redis.mget(...keys);
+  }
 }
