@@ -11,7 +11,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { RedisModule } from '@nestjs-modules/ioredis';
-import { ClientsModule, Transport } from '@nestjs/microservices';
+import { ElasticModule } from './elasticsearch/elasticsearch.module';
 
 @Module({
   imports: [
@@ -48,6 +48,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
     CommonModule,
     UsersModule,
     RedisModule,
+    ElasticModule
   ],
   controllers: [AppController],
   providers: [AppService],

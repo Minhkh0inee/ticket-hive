@@ -8,6 +8,7 @@ import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/role.guard';
 import { Roles } from 'src/common/decorator/role.decorator';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { SearchEventDto } from 'src/elasticsearch/dto/search-event.dto';
 
 @Controller('events')
 export class EventController {
@@ -25,6 +26,11 @@ export class EventController {
     @Get()
     getEvents(@Query() paginationDto: PaginationDto) {
         return this.eventService.findAll(paginationDto)
+    }
+
+    @Get('search')
+        search(@Query() dto: SearchEventDto) {
+        return this.eventService.search(dto);
     }
 
     
