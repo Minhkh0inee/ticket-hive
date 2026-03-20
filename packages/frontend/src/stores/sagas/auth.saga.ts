@@ -25,8 +25,9 @@ function* loginWorker(action: ReturnType<typeof loginRequest>): Generator {
       accessToken,
       refreshToken,
     }))
-  } catch (err: any) {
-    yield put(loginFailed(err.response?.data?.message ?? 'Login failed'))
+  } catch (err) {
+    const error = err as { response?: { data?: { message?: string } } }
+    yield put(loginFailed(error.response?.data?.message ?? 'Login failed'))
   }
 }
 export function* authWatcher(): Generator {
