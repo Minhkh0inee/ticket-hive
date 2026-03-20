@@ -15,6 +15,7 @@ async function bootstrap() {
   }));
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(new ResponseInterceptor());
+  app.enableCors()
 
   await app.listen(port);
   console.log(`🚀 Server running on port ${port} [${env}]`);
