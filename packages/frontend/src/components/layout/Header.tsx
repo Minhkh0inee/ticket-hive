@@ -3,11 +3,19 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { mockCategories } from '@/mocks/categories.mock'
+import { useAppSelector } from '@/hooks/useAppSelector'
 
 export function Header() {
   const [query, setQuery] = useState('')
   const navigate = useNavigate()
+  const user = useAppSelector((state) => state.auth.user)
+  const accessToken = useAppSelector((state) => state.auth.accessToken)
+  const loading = useAppSelector((state) => state.auth.loading)
+  const initials = user
+    ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
+    : ''
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
@@ -47,7 +55,6 @@ export function Header() {
           </Button>
         </form>
 
-        {/* Category nav */}
         <nav className="hidden lg:flex items-center gap-1">
           {mockCategories.filter((c) => c.id !== 'all').map((cat) => (
             <Link
@@ -60,18 +67,37 @@ export function Header() {
           ))}
         </nav>
 
-        {/* Auth */}
         <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
-          <Button variant="ghost" size="sm" asChild className="text-gray-700 hover:text-[oklch(0.6_0.2_250)]">
-            <Link to="/login">Login</Link>
-          </Button>
-          <Button
-            size="sm"
-            asChild
-            className="bg-[oklch(0.6_0.2_250)] hover:bg-[oklch(0.54_0.2_250)] text-white"
-          >
-            <Link to="/register">Register</Link>
-          </Button>
+          {accessToken && loading && !user ? (
+            <div className="flex items-center gap-2.5 animate-pulse">
+              <div className="size-8 rounded-full bg-gray-200" />
+              <div className="hidden sm:block h-4 w-20 rounded bg-gray-200" />
+            </div>
+          ) : user ? (
+            <div className="flex items-center gap-2.5">
+              <Avatar className="size-8">
+                <AvatarFallback className="bg-[oklch(0.6_0.2_250)] text-white text-xs font-semibold">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              <span className="hidden sm:block text-sm font-medium text-gray-700">
+                {user.firstName}
+              </span>
+            </div>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" asChild className="text-gray-700 hover:text-[oklch(0.6_0.2_250)]">
+                <Link to="/login">Login</Link>
+              </Button>
+              <Button
+                size="sm"
+                asChild
+                className="bg-[oklch(0.6_0.2_250)] hover:bg-[oklch(0.54_0.2_250)] text-white"
+              >
+                <Link to="/register">Register</Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </header>

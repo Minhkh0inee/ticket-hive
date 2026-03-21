@@ -1,20 +1,24 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import { Header } from './components/layout/Header'
-import { HomePage } from './pages/HomePage'
-import { Footer } from './components/layout/Footer'
+import { Toaster } from '@/components/ui/sonner'
+import { MainLayout } from '@/components/layout/MainLayout'
+import { HomePage } from '@/pages/HomePage'
+import { LoginPage } from '@/pages/LoginPage'
+import { RegisterPage } from '@/pages/RegisterPage'
 
 function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <div className="flex-1">
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-          </Routes>
-        </div>
-        <Footer />
-      </div>
+      <Toaster position="top-right" richColors />
+      <Routes>
+        {/* Auth routes — standalone, no header/footer */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+
+        {/* Main layout routes */}
+        <Route element={<MainLayout />}>
+          <Route path="/" element={<HomePage />} />
+        </Route>
+      </Routes>
     </BrowserRouter>
   )
 }
