@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from '@/components/ui/sonner'
+import { ScrollToTop } from '@/components/common/ScrollToTop'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { HomePage } from '@/pages/HomePage'
 import { EventsPage } from '@/pages/EventsPage'
@@ -10,6 +11,7 @@ import { RegisterPage } from '@/pages/RegisterPage'
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Toaster position="top-right" richColors />
       <Routes>
         {/* Auth routes — standalone, no header/footer */}

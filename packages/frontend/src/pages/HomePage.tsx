@@ -1,58 +1,112 @@
-import { useState, useMemo } from 'react'
+import { useMemo } from 'react'
 import { HeroBanner } from '@/components/home/HeroBanner'
-import { CategoryNav } from '@/components/home/CategoryNav'
-import { EventRow } from '@/components/home/EventRow'
+import { CategoryEventRow } from '@/components/events/CategoryEventRow'
+import { TrendingSection } from '@/components/events/TrendingSection'
+import { WeekendMonthSection } from '@/components/events/WeekendMonthSection'
+import { CitiesSection } from '@/components/events/CitiesSection'
+import { EventPromoBanner } from '@/components/event-detail/EventPromoBanner'
 import {
+  mockEvents,
   heroEvents,
   specialEvents,
   trendingEvents,
-  upcomingEvents,
 } from '@/mocks/events.mock'
-import { mockCategories } from '@/mocks/categories.mock'
-import type { EventCategory } from '@/types/event.types'
 
 export function HomePage() {
-  const [activeCategory, setActiveCategory] = useState<EventCategory | 'all'>('all')
-
-  const filteredSpecial = useMemo(() =>
-    activeCategory === 'all'
-      ? specialEvents
-      : specialEvents.filter((e) => e.category === activeCategory),
-    [activeCategory]
+  const musicEvents = useMemo(
+    () => mockEvents.filter(e => e.category === 'music'),
+    []
+  )
+  const theatreEvents = useMemo(
+    () => mockEvents.filter(e => e.category === 'theatre'),
+    []
+  )
+  const festivalEvents = useMemo(
+    () => mockEvents.filter(e => e.category === 'festival'),
+    []
+  )
+  const conferenceEvents = useMemo(
+    () => mockEvents.filter(e => e.category === 'conference'),
+    []
+  )
+  const sportsEvents = useMemo(
+    () => mockEvents.filter(e => e.category === 'sports'),
+    []
   )
 
-  const filteredTrending = useMemo(() =>
-    activeCategory === 'all'
-      ? trendingEvents
-      : trendingEvents.filter((e) => e.category === activeCategory),
-    [activeCategory]
-  )
-
-  const filteredUpcoming = useMemo(() =>
-    activeCategory === 'all'
-      ? upcomingEvents
-      : upcomingEvents.filter((e) => e.category === activeCategory),
-    [activeCategory]
+  const forYouEvents = useMemo(
+    () => mockEvents.filter((_, i) => [2, 5, 9, 15, 22, 28, 35, 43].includes(i)),
+    []
   )
 
   return (
-    <main>
-      {/* Hero */}
-      <section className="py-6 px-4 max-w-7xl mx-auto">
+    <main className="min-h-screen bg-[oklch(0.145_0_0)]">
+      {/* ── Hero Banner ───────────────────────────────────────────────────── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-0">
         <HeroBanner events={heroEvents} />
-      </section>
+      </div>
 
-      {/* Category filter + rows */}
-      <div className="py-6 px-4 max-w-7xl mx-auto space-y-10">
-        <CategoryNav
-          categories={mockCategories}
-          active={activeCategory}
-          onChange={setActiveCategory}
+      {/* ── Discovery sections ────────────────────────────────────────────── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-12">
+
+        {/* Sự kiện đặc biệt */}
+        <CategoryEventRow
+          title="Sự kiện đặc biệt"
+          events={specialEvents}
+          href="/events?type=special"
         />
 
-        <EventRow title="Special Events" events={filteredSpecial} href="/events?type=special" />
-        <EventRow title="Trending Now" events={filteredTrending} href="/events?type=trending" />
-        <EventRow title="Upcoming" events={filteredUpcoming} href="/events?type=upcoming" />
+        {/* Sự kiện xu hướng */}
+        <TrendingSection events={trendingEvents} />
+
+        {/* Dành cho bạn */}
+        <CategoryEventRow
+          title="Dành cho bạn"
+          events={forYouEvents}
+          href="/events"
+        />
+
+        {/* Cuối tuần này / Tháng này */}
+        <WeekendMonthSection />
+
+        {/* Promo banner */}
+        <EventPromoBanner />
+
+        {/* ── Category sections ─────────────────────────────────────────── */}
+
+        <CategoryEventRow
+          title="Nhạc sống"
+          events={musicEvents}
+          href="/events?category=music"
+        />
+
+        <CategoryEventRow
+          title="Sân khấu & Nghệ thuật"
+          events={theatreEvents}
+          href="/events?category=theatre"
+        />
+
+        <CategoryEventRow
+          title="Lễ hội"
+          events={festivalEvents}
+          href="/events?category=festival"
+        />
+
+        <CategoryEventRow
+          title="Hội thảo & Workshop"
+          events={conferenceEvents}
+          href="/events?category=conference"
+        />
+
+        <CategoryEventRow
+          title="Thể thao"
+          events={sportsEvents}
+          href="/events?category=sports"
+        />
+
+        {/* ── Cities ─────────────────────────────────────────────────────── */}
+        <CitiesSection />
+
       </div>
     </main>
   )

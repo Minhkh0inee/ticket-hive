@@ -44,17 +44,17 @@ export function HeroBanner({ events }: HeroBannerProps) {
       {/* Arrow controls */}
       <button
         onClick={prev}
-        className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm shadow flex items-center justify-center hover:bg-white transition-colors z-10"
-        aria-label="Previous"
+        className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 backdrop-blur-sm shadow flex items-center justify-center hover:bg-black/70 transition-colors z-10"
+        aria-label="Trước"
       >
-        <ChevronLeft className="w-5 h-5 text-gray-700" />
+        <ChevronLeft className="w-5 h-5 text-white" />
       </button>
       <button
         onClick={next}
-        className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm shadow flex items-center justify-center hover:bg-white transition-colors z-10"
-        aria-label="Next"
+        className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 backdrop-blur-sm shadow flex items-center justify-center hover:bg-black/70 transition-colors z-10"
+        aria-label="Tiếp theo"
       >
-        <ChevronRight className="w-5 h-5 text-gray-700" />
+        <ChevronRight className="w-5 h-5 text-white" />
       </button>
 
       {/* Dot indicators */}
@@ -66,9 +66,9 @@ export function HeroBanner({ events }: HeroBannerProps) {
             className={`h-1.5 rounded-full transition-all duration-200 ${
               i === current
                 ? 'w-6 bg-[oklch(0.6_0.2_250)]'
-                : 'w-1.5 bg-gray-300 hover:bg-gray-400'
+                : 'w-1.5 bg-white/30 hover:bg-white/50'
             }`}
-            aria-label={`Go to slide ${i + 1}`}
+            aria-label={`Đến slide ${i + 1}`}
           />
         ))}
       </div>
@@ -109,7 +109,7 @@ function HeroCard({ event }: { event: Event }) {
           size="sm"
           className="bg-[oklch(0.6_0.2_250)] hover:bg-[oklch(0.54_0.2_250)] text-white h-8 text-xs pointer-events-none"
         >
-          Get Tickets
+          Mua vé ngay
         </Button>
       </div>
     </Link>
