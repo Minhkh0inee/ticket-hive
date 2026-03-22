@@ -11,7 +11,7 @@ export interface Event {
   bannerUrl: string | null
   totalSeats: number
   availableSeats: number
-  basePrice: string
+  basePrice: number
 }
 
 export interface TicketType {
@@ -32,8 +32,8 @@ export interface EventDetail {
   eventId: string
   endDate?: string
   venueAddress?: string
-  galleryImages: string[]
-  fullDescription: string
+  bannerUrl: string
+  description: string
   ticketTypes: TicketType[]
   organizer: EventOrganizer
   isSoldOut?: boolean

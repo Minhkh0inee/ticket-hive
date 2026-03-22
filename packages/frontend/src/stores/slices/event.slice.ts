@@ -14,64 +14,99 @@ interface Event {
   bannerUrl: string | null
   totalSeats: number
   availableSeats: number
-  basePrice: string
+  basePrice: number
 }
 
 interface EventState {
   events: Event[]
-  selectedEvent: Event | null
   isLoading: boolean
   error: string | null
+  pagination: {
+    total: number
+    offset: number
+    limit: number
+    totalPages: number
+  }
+
+  currentEvent: Event | null
+  detailLoading: boolean
+  detailError: string | null
 }
 
 const initialState: EventState = {
   events: [],
-  selectedEvent: null,
   isLoading: false,
   error: null,
+  pagination:{
+    limit: 0,
+    offset: 0,
+    total: 0,
+    totalPages: 0
+  },
+  currentEvent: null,
+  detailLoading: false,
+  detailError: null,
 };
 
 const eventSlice = createSlice({
   name: "event",
   initialState,
   reducers: {
-    fetchEventsRequest: (state) => {
-      state.isLoading = true;
-      state.error = null;
-    },
-    fetchEventsSuccess: (state, action: PayloadAction<Event[]>) => {
+  fetchEventsRequest(state, _action: PayloadAction<{
+    offset?: number
+    limit?: number
+    category?: string
+    city?: string
+    search?: string
+  } | undefined>) {
+    state.isLoading = true
+    state.error = null
+  },
+  fetchEventsSuccess(state, action: PayloadAction<{
+    data: Event[]
+    total: number
+    offset: number
+    limit: number
+    totalPages: number
+  }>) {
     state.isLoading = false
-    state.events = action.payload
-    },
+    state.events = action.payload.data
+    state.pagination = {
+      total: action.payload.total,
+      offset: action.payload.offset,
+      limit: action.payload.limit,
+      totalPages: action.payload.totalPages,
+    }
+  },
     fetchEventsFailed: (state, action: PayloadAction<string>) => {
       state.isLoading = false
       state.error = action.payload
     },
     fetchEventDetailRequest: (state, action: PayloadAction<string>) => {
-    state.isLoading = true
-    state.error = null
+      state.detailLoading = true
+      state.detailError = null
+      state.currentEvent = null
     },
     fetchEventDetailSuccess: (
       state,
-      action: PayloadAction<{selectedEvent: Event }>,
+      action: PayloadAction<Event>,
     ) => {
-      state.isLoading = false;
-      state.error = null;
-      state.selectedEvent = action.payload.selectedEvent;
+      state.detailLoading = false
+      state.currentEvent = action.payload
     },
     fetchEventDetailFailed: (
       state,
       action: PayloadAction<string >,
     ) => {
-      state.isLoading = false
-      state.error = action.payload
+      state.detailLoading = false
+      state.detailError = action.payload
     },
-    clearSelectedEvent: (state) => {
-    state.selectedEvent = null
-    state.error = null
+    clearCurrentEvent: (state) => {
+      state.currentEvent = null
+      state.detailError = null
     }
   },
 });
 
-export const { fetchEventsRequest, fetchEventsSuccess, fetchEventsFailed, fetchEventDetailRequest, fetchEventDetailSuccess, fetchEventDetailFailed, clearSelectedEvent } = eventSlice.actions
+export const { fetchEventsRequest, fetchEventsSuccess, fetchEventsFailed, fetchEventDetailRequest, fetchEventDetailSuccess, fetchEventDetailFailed, clearCurrentEvent } = eventSlice.actions
 export default eventSlice.reducer

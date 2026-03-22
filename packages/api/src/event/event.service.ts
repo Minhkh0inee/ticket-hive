@@ -36,13 +36,31 @@ export class EventService implements OnModuleInit{
     }
 
     async findAll(paginationDto: PaginationDto): Promise<IPaginatedResult<Event>>  {
-        const { limit = 10, offset = 0 } = paginationDto;
-        const [data, total] = await this.eventRepo.findAndCount({
-            take: limit,
-            skip: offset,
-            order: { createdAt: 'DESC' }
-        })
-        return { data, total, limit, offset };
+        const { limit = 9, offset = 0, category, city, search } = paginationDto
+
+        const query = this.eventRepo.createQueryBuilder('event')
+            .where('event.deletedAt IS NULL')
+
+        if (category) {
+            query.andWhere('event.category = :category', { category })
+        }
+        if (city) {
+            query.andWhere('event.city ILIKE :city', { city: `%${city}%` })
+        }
+        if (search) {
+            query.andWhere(
+            '(event.title ILIKE :search OR event.venue ILIKE :search)',
+            { search: `%${search}%` }
+            )
+        }
+
+        const [data, total] = await query
+            .orderBy('event.eventDate', 'ASC')
+            .skip(offset)
+            .take(limit)
+            .getManyAndCount()
+
+        return { data, total, limit, offset, totalPages: Math.ceil(total / limit) }
     }
 
     async findEventById(id: string): Promise<Event>  {
