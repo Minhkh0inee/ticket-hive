@@ -13,3 +13,28 @@ export interface Event {
   availableSeats: number
   basePrice: string
 }
+
+export interface TicketType {
+  id: string
+  name: string
+  price: string
+  description?: string
+  available: boolean
+}
+
+export interface EventOrganizer {
+  name: string
+  logoUrl: string | null
+  description: string
+}
+
+export interface EventDetail {
+  eventId: string
+  endDate?: string
+  venueAddress?: string
+  galleryImages: string[]
+  fullDescription: string
+  ticketTypes: TicketType[]
+  organizer: EventOrganizer
+  isSoldOut?: boolean
+}
