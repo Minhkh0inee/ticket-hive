@@ -10,12 +10,12 @@ const CITIES = [
   },
   {
     name: 'Hà Nội',
-    venue: 'Hanoi',
+    venue: 'Ha Noi',
     image: 'https://images.unsplash.com/photo-1619546952812-520e98064a52?w=600&q=80',
   },
   {
-    name: 'Đà Lạt',
-    venue: 'Da Lat',
+    name: 'Đà Nẵng',
+    venue: 'Da Nang',
     image: 'https://images.unsplash.com/photo-1553877522-43269d4ea984?w=600&q=80',
   },
   {

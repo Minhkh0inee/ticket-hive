@@ -1,110 +1,76 @@
-import { useMemo } from 'react'
+import { useEffect } from 'react'
 import { HeroBanner } from '@/components/home/HeroBanner'
 import { CategoryEventRow } from '@/components/events/CategoryEventRow'
 import { TrendingSection } from '@/components/events/TrendingSection'
-import { WeekendMonthSection } from '@/components/events/WeekendMonthSection'
 import { CitiesSection } from '@/components/events/CitiesSection'
 import { EventPromoBanner } from '@/components/event-detail/EventPromoBanner'
-import {
-  mockEvents,
-  heroEvents,
-  specialEvents,
-  trendingEvents,
-} from '@/mocks/events.mock'
+import { useAppDispatch } from '@/hooks/useAppDispatch'
+import { useAppSelector } from '@/hooks/useAppSelector'
+import { loadHomePageRequest } from '@/stores/slices/home.slice'
 
 export function HomePage() {
-  const musicEvents = useMemo(
-    () => mockEvents.filter(e => e.category === 'music'),
-    []
-  )
-  const theatreEvents = useMemo(
-    () => mockEvents.filter(e => e.category === 'theatre'),
-    []
-  )
-  const festivalEvents = useMemo(
-    () => mockEvents.filter(e => e.category === 'festival'),
-    []
-  )
-  const conferenceEvents = useMemo(
-    () => mockEvents.filter(e => e.category === 'conference'),
-    []
-  )
-  const sportsEvents = useMemo(
-    () => mockEvents.filter(e => e.category === 'sports'),
-    []
-  )
+  const dispatch = useAppDispatch()
+  const home = useAppSelector(state => state.home)
 
-  const forYouEvents = useMemo(
-    () => mockEvents.filter((_, i) => [2, 5, 9, 15, 22, 28, 35, 43].includes(i)),
-    []
-  )
-
+  useEffect(() => {
+    dispatch(loadHomePageRequest())
+  }, [dispatch])
+  console.log(home)
   return (
     <main className="min-h-screen bg-[oklch(0.145_0_0)]">
-      {/* ── Hero Banner ───────────────────────────────────────────────────── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-0">
-        <HeroBanner events={heroEvents} />
+        <HeroBanner events={home.featured.data} />
       </div>
 
-      {/* ── Discovery sections ────────────────────────────────────────────── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-12">
 
-        {/* Sự kiện đặc biệt */}
         <CategoryEventRow
           title="Sự kiện đặc biệt"
-          events={specialEvents}
+          events={home.special.data}
           href="/events?type=special"
         />
 
-        {/* Sự kiện xu hướng */}
-        <TrendingSection events={trendingEvents} />
+        <TrendingSection events={home.trending.data} />
 
-        {/* Dành cho bạn */}
         <CategoryEventRow
-          title="Dành cho bạn"
-          events={forYouEvents}
+          title="Mới nhất"
+          events={home.newEvents.data}
           href="/events"
         />
 
-        {/* Cuối tuần này / Tháng này */}
-        <WeekendMonthSection />
-
-        {/* Promo banner */}
         <EventPromoBanner />
 
-        {/* ── Category sections ─────────────────────────────────────────── */}
 
         <CategoryEventRow
           title="Nhạc sống"
-          events={musicEvents}
+          events={home.music.data}
           href="/events?category=music"
         />
 
         <CategoryEventRow
           title="Sân khấu & Nghệ thuật"
-          events={theatreEvents}
+          events={home.theatre.data}
           href="/events?category=theatre"
         />
 
         <CategoryEventRow
           title="Lễ hội"
-          events={festivalEvents}
+          events={home.festival.data}
           href="/events?category=festival"
         />
 
         <CategoryEventRow
           title="Hội thảo & Workshop"
-          events={conferenceEvents}
+          events={home.conference.data}
           href="/events?category=conference"
         />
 
         <CategoryEventRow
           title="Thể thao"
-          events={sportsEvents}
+          events={home.sports.data}
           href="/events?category=sports"
         />
 
-        {/* ── Cities ─────────────────────────────────────────────────────── */}
         <CitiesSection />
 
       </div>

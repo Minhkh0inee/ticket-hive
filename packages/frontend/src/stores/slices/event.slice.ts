@@ -58,6 +58,9 @@ const eventSlice = createSlice({
     category?: string
     city?: string
     search?: string
+    tags?: string[]
+    dateFilter?: 'this_week' | 'this_month'
+    ignoreIds?: string[]
   } | undefined>) {
     state.isLoading = true
     state.error = null

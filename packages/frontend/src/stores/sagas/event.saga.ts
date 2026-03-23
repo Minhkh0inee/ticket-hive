@@ -5,7 +5,7 @@ import type { AxiosResponse } from "axios"
 
 function* fetchEventsWorker(action: ReturnType<typeof fetchEventsRequest>) {
   try {
-    const { offset = 0, limit = 9, category, city, search } = action.payload ?? {}
+    const { offset = 0, limit = 9, category, city, search, tags, dateFilter, ignoreIds } = action.payload ?? {}
 
     const params = new URLSearchParams()
     params.append('offset', String(offset))
@@ -13,6 +13,9 @@ function* fetchEventsWorker(action: ReturnType<typeof fetchEventsRequest>) {
     if (category) params.append('category', category)
     if (city) params.append('city', city)
     if (search) params.append('search', search)
+    if (tags) tags.forEach(t => params.append('tag', t))
+    if (dateFilter) params.append('dateFilter', dateFilter)
+    if (ignoreIds) ignoreIds.forEach(id => params.append('ignoreIds', id))
 
     const response = (yield call(
       () => axiosInstance.get(`/events?${params.toString()}`)
