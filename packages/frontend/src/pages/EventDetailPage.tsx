@@ -1,4 +1,5 @@
 import { useMemo, useCallback, useEffect } from 'react'
+import type { TicketType } from '@/types/event.types'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -56,6 +57,17 @@ export function EventDetailPage() {
     [events, id]
   )
 
+  const ticketTypes = useMemo<TicketType[]>(() => {
+    if (!currentEvent) return []
+    const base = currentEvent.basePrice
+    return [
+      { id: 'vip',     section: 'vip',     name: 'VIP',        price: String(base * 3),   available: currentEvent.availableSeats > 0 },
+      { id: 'floor',   section: 'floor',   name: 'Sàn',        price: String(base * 1.5), available: currentEvent.availableSeats > 0 },
+      { id: 'balcony', section: 'balcony', name: 'Ban công',   price: String(base * 1.2), available: currentEvent.availableSeats > 0 },
+      { id: 'general', section: 'general', name: 'Phổ thông',  price: String(base),       available: currentEvent.availableSeats > 0 },
+    ]
+  }, [currentEvent])
+
   // ── Loading ──────────────────────────────────────────────────────────────
   if (detailLoading) return <EventDetailSkeleton />
 
@@ -112,15 +124,11 @@ export function EventDetailPage() {
         {/* ── CONTENT + SIDEBAR ────────────────────────────────────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 mb-10">
           <div className="space-y-4">
-
-            {/* TODO: Phân Loại ghế và nhà tổ chức */}
-            {/* <EventDescription text={currentEvent.description} />
-              <EventSchedule
+            <EventDescription text={currentEvent.description} />
+            <EventSchedule
               eventDate={currentEvent.eventDate}
-              endDate={detail.endDate}
-              ticketTypes={detail.ticketTypes}
+              ticketTypes={ticketTypes}
             />
-            <EventOrganizer organizer={detail.organizer} /> */}
           </div>
           <aside aria-label="Thông tin thêm" className="lg:sticky lg:top-24 self-start">
             <EventSidebar viewerCount={viewerCount} />

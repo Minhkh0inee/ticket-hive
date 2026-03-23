@@ -14,12 +14,27 @@ export interface Event {
   basePrice: number
 }
 
+export type SeatSection = 'floor' | 'balcony' | 'vip' | 'general'
+
+export interface Seat {
+  id: string
+  row: string
+  number: number
+  label: string
+  section: SeatSection
+  status: 'available' | 'booked' | 'locked'
+  priceModifier: string
+  isLocked: boolean
+  lockedBy: string | null
+}
+
 export interface TicketType {
   id: string
   name: string
   price: string
   description?: string
   available: boolean
+  section: SeatSection
 }
 
 export interface EventOrganizer {
