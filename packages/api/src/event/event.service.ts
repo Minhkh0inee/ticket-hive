@@ -36,7 +36,7 @@ export class EventService implements OnModuleInit{
     }
 
     async findAll(paginationDto: PaginationDto): Promise<IPaginatedResult<Event>>  {
-        const { limit = 9, offset = 0, category, city, search } = paginationDto
+        const { limit = 9, offset = 0, category, city, search, tag, ignoreIds, dateFilter } = paginationDto
 
         const query = this.eventRepo.createQueryBuilder('event')
             .where('event.deletedAt IS NULL')
@@ -52,6 +52,29 @@ export class EventService implements OnModuleInit{
             '(event.title ILIKE :search OR event.venue ILIKE :search)',
             { search: `%${search}%` }
             )
+        }
+        if (tag) {
+            query.andWhere('event.tag = :tag', { tag })
+        }
+        if (ignoreIds && ignoreIds.length > 0) {
+            query.andWhere('event.id NOT IN (:...ignoreIds)', { ignoreIds })
+        }
+        if (dateFilter) {
+            const now = new Date();
+            const end = new Date(now);
+            end.setHours(23, 59, 59, 999);
+            let start: Date;
+            if (dateFilter === 'this_month') {
+                start = new Date(now.getFullYear(), now.getMonth(), 1);
+            } else {
+                const day = now.getDay();
+                const diff = day === 0 ? -6 : 1 - day;
+                start = new Date(now);
+                start.setDate(now.getDate() + diff);
+                start.setHours(0, 0, 0, 0);
+            }
+            query.andWhere('event.eventDate >= :start', { start })
+                 .andWhere('event.eventDate <= :end', { end })
         }
 
         const [data, total] = await query
