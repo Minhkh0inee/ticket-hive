@@ -15,6 +15,9 @@ import EventDetailSkeleton from '@/components/events/EventDetailSkeleton'
 import EventDetailError from '@/components/events/EventDetailError'
 import { EventSchedule } from '@/components/event-detail/schedule/EventSchedule'
 import { EventOrganizer } from '@/components/event-detail/EventOrganizer'
+import { clearSeats } from '@/stores/slices/seat.slice'
+import EventMoreSection from '@/components/event-detail/EventMoreSection'
+import EventRelatedSection from '@/components/event-detail/EventRelatedSection'
 
 function deriveViewerCount(id: string): number {
   const seed = id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)
@@ -29,7 +32,6 @@ export function EventDetailPage() {
   const { currentEvent, detailLoading, detailError, events } = useAppSelector(
     (state) => state.event
   )
-  console.log(currentEvent)
 
   const handleBack = useCallback(() => navigate(-1), [navigate])
 
@@ -41,9 +43,16 @@ export function EventDetailPage() {
 
   useEffect(() => {
     if (events.length === 0) {
-      dispatch(fetchEventsRequest({}))
+      dispatch(fetchEventsRequest({ limit: 12 }))
     }
   }, [dispatch, events.length])
+
+
+  useEffect(() => {
+    return () => {
+      dispatch(clearSeats())
+    }
+  }, [dispatch])
 
   const relatedEvents = useMemo(
     () => currentEvent
@@ -57,13 +66,10 @@ export function EventDetailPage() {
     [events, id]
   )
 
-  // ── Loading ──────────────────────────────────────────────────────────────
   if (detailLoading) return <EventDetailSkeleton />
 
-  // ── Error ────────────────────────────────────────────────────────────────
   if (detailError) return <EventDetailError detailError={detailError} />
 
-  // ── Not found ────────────────────────────────────────────────────────────
   if (!currentEvent) return (
     <div className="min-h-screen bg-[oklch(0.145_0_0)] flex flex-col items-center justify-center gap-4">
       <p className="text-white text-xl font-bold">Không tìm thấy sự kiện</p>
@@ -83,7 +89,6 @@ export function EventDetailPage() {
     <div className="min-h-screen bg-[oklch(0.145_0_0)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
 
-        {/* Back */}
         <Button
           variant="ghost"
           size="sm"
@@ -95,7 +100,6 @@ export function EventDetailPage() {
           Quay lại
         </Button>
 
-        {/* ── HERO ─────────────────────────────────────────────────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-4 mb-8">
           <EventInfoPanel
             title={currentEvent.title}
@@ -110,7 +114,6 @@ export function EventDetailPage() {
           />
         </div>
 
-        {/* ── CONTENT + SIDEBAR ────────────────────────────────────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 mb-10">
           <div className="space-y-4">
             <EventDescription text={currentEvent.description} />
@@ -125,52 +128,15 @@ export function EventDetailPage() {
           </aside>
         </div>
 
-        {/* ── RELATED EVENTS ───────────────────────────────────────────────── */}
         {relatedEvents.length > 0 && (
-          <section aria-labelledby="related-heading" className="mb-10">
-            <div className="flex items-center justify-between mb-5">
-              <h2 id="related-heading" className="text-white font-bold text-lg">
-                Có thể bạn cũng thích
-              </h2>
-              <Link
-                to={`/events?category=${currentEvent.category}`}
-                className="text-[oklch(0.6_0.2_250)] text-sm hover:underline flex items-center gap-1"
-              >
-                Xem tất cả <ChevronRight size={14} aria-hidden="true" />
-              </Link>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              {relatedEvents.map(e => <EventGridCard key={e.id} event={e} />)}
-            </div>
-          </section>
+            <EventRelatedSection category={currentEvent.category} relatedEvents={relatedEvents}/>
         )}
 
-        {/* ── PROMO BANNER ─────────────────────────────────────────────────── */}
         <div className="mb-10">
           <EventPromoBanner />
         </div>
 
-        {/* ── MORE EVENTS ──────────────────────────────────────────────────── */}
-        <section aria-labelledby="more-heading" className="mb-10">
-          <h2 id="more-heading" className="text-white font-bold text-lg mb-5">
-            Sự kiện khác
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
-            {moreEvents.map(e => <EventGridCard key={e.id} event={e} />)}
-          </div>
-          <div className="flex justify-center">
-            <Button
-              variant="outline"
-              asChild
-              className="rounded-full border-[oklch(0.6_0.2_250)] text-[oklch(0.6_0.2_250)] hover:bg-[oklch(0.6_0.2_250)] hover:text-white bg-transparent px-8"
-            >
-              <Link to="/events">
-                Xem thêm sự kiện
-                <ChevronRight size={16} aria-hidden="true" />
-              </Link>
-            </Button>
-          </div>
-        </section>
+      <EventMoreSection moreEvents={moreEvents}/>
 
       </div>
     </div>
