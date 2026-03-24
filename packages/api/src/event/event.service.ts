@@ -87,7 +87,7 @@ export class EventService implements OnModuleInit{
     }
 
     async findEventById(id: string): Promise<Event>  {
-        const event = await this.eventRepo.findOne({where: {id}})
+        const event = await this.eventRepo.findOne({where: {id}, relations: ['organizer']})
         if(!event) throw new NotFoundException(`Event with ${id} not found`);
         return event
     }

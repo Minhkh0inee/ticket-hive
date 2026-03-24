@@ -15,7 +15,6 @@ export function HomePage() {
   useEffect(() => {
     dispatch(loadHomePageRequest())
   }, [dispatch])
-  console.log(home)
   return (
     <main className="min-h-screen bg-[oklch(0.145_0_0)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-0">

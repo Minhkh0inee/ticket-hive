@@ -1,13 +1,12 @@
 import { useMemo, useCallback, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, ChevronRight } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { HeroGallery } from '@/components/event-detail/HeroGallery'
 import { EventInfoPanel } from '@/components/event-detail/EventInfoPanel'
 import { EventDescription } from '@/components/event-detail/EventDescription'
 import { EventSidebar } from '@/components/event-detail/EventSidebar'
 import { EventPromoBanner } from '@/components/event-detail/EventPromoBanner'
-import { EventGridCard } from '@/components/common/EventGridCard'
 import { useAppDispatch } from '@/hooks/useAppDispatch'
 import { useAppSelector } from '@/hooks/useAppSelector'
 import { fetchEventDetailRequest, fetchEventsRequest } from '@/stores/slices/event.slice'
@@ -122,6 +121,7 @@ export function EventDetailPage() {
               eventDate={currentEvent.eventDate}
               basePrice={currentEvent.basePrice}
             />
+             <EventOrganizer organizer={currentEvent.organizer} /> 
           </div>
           <aside aria-label="Thông tin thêm" className="lg:sticky lg:top-24 self-start">
             <EventSidebar viewerCount={viewerCount} />

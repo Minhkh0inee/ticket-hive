@@ -12,6 +12,7 @@ export interface Event {
   totalSeats: number
   availableSeats: number
   basePrice: number
+  organizer: EventOrganizer
 }
 
 export type SeatSection = 'floor' | 'balcony' | 'vip' | 'general'
@@ -40,9 +41,10 @@ export interface TicketType {
 }
 
 export interface EventOrganizer {
-  name: string
-  logoUrl: string | null
-  description: string
+  id: string,
+  firstName: string,
+  lastName: string,
+  email: string,
 }
 
 export interface EventDetail {

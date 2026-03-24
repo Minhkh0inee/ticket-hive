@@ -1,21 +1,9 @@
+import type { Event } from "@/types/event.types";
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 
 type EventCategory = 'music' | 'sports' | 'theatre' | 'festival' | 'conference'
 
-interface Event {
-  id: string
-  title: string
-  description: string
-  venue: string
-  city: string
-  category: EventCategory
-  eventDate: string
-  bannerUrl: string | null
-  totalSeats: number
-  availableSeats: number
-  basePrice: number
-}
 
 interface EventState {
   events: Event[]

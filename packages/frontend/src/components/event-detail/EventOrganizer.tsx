@@ -1,6 +1,6 @@
 import { memo, useMemo } from 'react'
-import { Building2 } from 'lucide-react'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Mail } from 'lucide-react'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import type { EventOrganizer as OrganizerType } from '@/types/event.types'
 
 interface EventOrganizerProps {
@@ -9,9 +9,11 @@ interface EventOrganizerProps {
 
 export const EventOrganizer = memo(function EventOrganizer({ organizer }: EventOrganizerProps) {
   const initials = useMemo(
-    () => organizer.name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase(),
-    [organizer.name]
+    () => `${organizer.firstName[0]}${organizer.lastName[0]}`.toUpperCase(),
+    [organizer.firstName, organizer.lastName]
   )
+
+  const fullName = `${organizer.firstName} ${organizer.lastName}`
 
   return (
     <section
@@ -26,23 +28,19 @@ export const EventOrganizer = memo(function EventOrganizer({ organizer }: EventO
         Ban tổ chức
       </h2>
 
-      <div className="flex items-start gap-4">
-        <Avatar className="w-14 h-14 rounded-xl border border-[oklch(0.3_0_0)] shrink-0">
-          {organizer.logoUrl && <AvatarImage src={organizer.logoUrl} alt={organizer.name} />}
-          <AvatarFallback className="rounded-xl bg-[oklch(0.25_0_0)] text-[oklch(0.5_0_0)]">
-            {organizer.logoUrl ? (
-              <Building2 size={22} aria-hidden="true" />
-            ) : (
-              initials || <Building2 size={22} aria-hidden="true" />
-            )}
+      <div className="flex items-center gap-4">
+        <Avatar className="w-12 h-12 rounded-xl border border-[oklch(0.3_0_0)] shrink-0">
+          <AvatarFallback className="rounded-xl bg-[oklch(0.6_0.2_250)] text-white text-sm font-bold">
+            {initials}
           </AvatarFallback>
         </Avatar>
 
-        <div className="min-w-0">
-          <p className="text-white font-bold text-sm mb-1">{organizer.name}</p>
-          <p className="text-[oklch(0.6_0_0)] text-xs leading-relaxed">
-            {organizer.description}
-          </p>
+        <div className="min-w-0 flex-1">
+          <p className="text-white font-bold text-sm">{fullName}</p>
+          <div className="flex items-center gap-1.5 mt-1">
+            <Mail size={11} className="text-[oklch(0.5_0_0)] shrink-0" aria-hidden="true" />
+            <p className="text-[oklch(0.5_0_0)] text-xs truncate">{organizer.email}</p>
+          </div>
         </div>
       </div>
     </section>
