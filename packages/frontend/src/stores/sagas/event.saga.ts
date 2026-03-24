@@ -41,7 +41,10 @@ function* fetchEventDetailWorker(action: ReturnType<typeof fetchEventDetailReque
   }
 }
 
+
+
 export function* eventsWatcher() {
   yield takeLatest(fetchEventsRequest.type, fetchEventsWorker)
   yield takeLatest(fetchEventDetailRequest.type, fetchEventDetailWorker)
+
 }

@@ -16,6 +16,8 @@ export interface Event {
 
 export type SeatSection = 'floor' | 'balcony' | 'vip' | 'general'
 
+export type SeatStatus = 'available' | 'locked' | 'booked'
+
 export interface Seat {
   id: string
   row: string

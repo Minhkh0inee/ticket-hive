@@ -104,6 +104,7 @@ const eventSlice = createSlice({
       state.detailLoading = false
       state.detailError = action.payload
     },
+
     clearCurrentEvent: (state) => {
       state.currentEvent = null
       state.detailError = null

@@ -1,5 +1,4 @@
 import { useMemo, useCallback, useEffect } from 'react'
-import type { TicketType } from '@/types/event.types'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -14,7 +13,7 @@ import { useAppSelector } from '@/hooks/useAppSelector'
 import { fetchEventDetailRequest, fetchEventsRequest } from '@/stores/slices/event.slice'
 import EventDetailSkeleton from '@/components/events/EventDetailSkeleton'
 import EventDetailError from '@/components/events/EventDetailError'
-import { EventSchedule } from '@/components/event-detail/EventSchedule'
+import { EventSchedule } from '@/components/event-detail/schedule/EventSchedule'
 import { EventOrganizer } from '@/components/event-detail/EventOrganizer'
 
 function deriveViewerCount(id: string): number {
@@ -30,6 +29,7 @@ export function EventDetailPage() {
   const { currentEvent, detailLoading, detailError, events } = useAppSelector(
     (state) => state.event
   )
+  console.log(currentEvent)
 
   const handleBack = useCallback(() => navigate(-1), [navigate])
 
@@ -56,17 +56,6 @@ export function EventDetailPage() {
     () => events.filter(e => e.id !== id).slice(0, 4),
     [events, id]
   )
-
-  const ticketTypes = useMemo<TicketType[]>(() => {
-    if (!currentEvent) return []
-    const base = currentEvent.basePrice
-    return [
-      { id: 'vip',     section: 'vip',     name: 'VIP',        price: String(base * 3),   available: currentEvent.availableSeats > 0 },
-      { id: 'floor',   section: 'floor',   name: 'Sàn',        price: String(base * 1.5), available: currentEvent.availableSeats > 0 },
-      { id: 'balcony', section: 'balcony', name: 'Ban công',   price: String(base * 1.2), available: currentEvent.availableSeats > 0 },
-      { id: 'general', section: 'general', name: 'Phổ thông',  price: String(base),       available: currentEvent.availableSeats > 0 },
-    ]
-  }, [currentEvent])
 
   // ── Loading ──────────────────────────────────────────────────────────────
   if (detailLoading) return <EventDetailSkeleton />
@@ -126,8 +115,9 @@ export function EventDetailPage() {
           <div className="space-y-4">
             <EventDescription text={currentEvent.description} />
             <EventSchedule
+              eventId={id!}
               eventDate={currentEvent.eventDate}
-              ticketTypes={ticketTypes}
+              basePrice={currentEvent.basePrice}
             />
           </div>
           <aside aria-label="Thông tin thêm" className="lg:sticky lg:top-24 self-start">
