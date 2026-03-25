@@ -57,3 +57,49 @@ export interface EventDetail {
   organizer: EventOrganizer
   isSoldOut?: boolean
 }
+
+
+export enum BookingStatus {
+  PENDING = 'pending',
+  CONFIRMED = 'confirmed',
+  CANCELLED = 'cancelled',
+}
+
+export interface BookingUser {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+}
+
+export interface BookingEvent {
+  id: string
+  title: string
+  venue: string
+  city: string
+  eventDate: string
+  bannerUrl: string | null
+}
+
+export interface Booking {
+  id: string
+  seatIds: string[]
+  attendeeName: string
+  attendeeEmail: string
+  attendeePhone: string
+  totalPrice: string
+  status: BookingStatus
+  user: BookingUser
+  event: BookingEvent
+  createdAt: string
+  updatedAt: string
+  deletedAt: string | null
+}
+
+export interface CreateBookingDto {
+  eventId: string
+  seatIds: string[]
+  attendeeName: string
+  attendeeEmail: string
+  attendeePhone?: string
+}

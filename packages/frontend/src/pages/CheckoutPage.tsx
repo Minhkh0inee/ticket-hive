@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Lock, CalendarDays, MapPin, CreditCard, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { fmtPrice, fmtDate } from '@/lib/format'
 import { useAppSelector } from '@/hooks/useAppSelector'
 import { clearSelection, unlockSeatRequest } from '@/stores/slices/seat.slice'
+import { createBookingRequest, resetCreateBooking } from '@/stores/slices/booking.slice'
 import { SECTION_CONFIG } from '@/components/event-detail/schedule/constants'
 import type { SeatSection } from '@/types/event.types'
 import { useAppDispatch } from '@/hooks/useAppDispatch'
@@ -45,9 +46,9 @@ export function CheckoutPage() {
   const location = useLocation()
   const state = (location.state ?? {}) as CheckoutLocationState
   const dispatch = useAppDispatch()
+  const confirmedRef = useRef(false)
 
-
-
+  const { isCreating, createSuccess, createError, currentBooking } = useAppSelector(s => s.booking)
 
   const [fallbackExpiry] = useState(() =>
     new Date(Date.now() + 10 * 60 * 1000).toISOString()
@@ -59,16 +60,16 @@ export function CheckoutPage() {
   const currentEvent = useAppSelector(s => s.event.currentEvent)
   const { seats, selectedSeats } = useAppSelector(s => s.seat)
 
-function handleBack() {
-  if (currentEvent?.id && selectedSeats.length > 0) {
-    dispatch(unlockSeatRequest({
-      eventId: currentEvent.id,
-      seatIds: selectedSeats,
-    }))
+  function handleBack() {
+    if (!confirmedRef.current && currentEvent?.id && selectedSeats.length > 0) {
+      dispatch(unlockSeatRequest({
+        eventId: currentEvent.id,
+        seatIds: selectedSeats,
+      }))
+    }
+    dispatch(clearSelection())
+    navigate(-1)
   }
-  dispatch(clearSelection())  
-  navigate(-1)
-}
 
   const selectedSeatObjects = seats.filter(s => selectedSeats.includes(s.id))
   const section = selectedSeatObjects[0]?.section as SeatSection | undefined
@@ -90,14 +91,29 @@ function handleBack() {
     }
   }, [isExpired, secondsLeft, state.lockExpiresAt, navigate])
 
+  // Navigate to confirmation on successful booking
+  useEffect(() => {
+    if (createSuccess && currentBooking) {
+      confirmedRef.current = true
+      dispatch(clearSelection())
+      dispatch(resetCreateBooking())
+      navigate(`/confirmation/${currentBooking.id}`, { replace: true })
+    }
+  }, [createSuccess, currentBooking, dispatch, navigate])
+
+  // Reset slice on unmount so stale state doesn't linger
+  useEffect(() => {
+    return () => { dispatch(resetCreateBooking()) }
+  }, [dispatch])
+
   const [form, setForm] = useState({
     fullName: '',
     email: '',
+    phone: '',
     cardNumber: '',
     expiry: '',
     cvv: '',
   })
-  const [isPayLoading, setIsPayLoading] = useState(false)
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
@@ -117,16 +133,17 @@ function handleBack() {
 
   function handlePay(e: React.FormEvent) {
     e.preventDefault()
-    if (isExpired || isPayLoading) return
-    setIsPayLoading(true)
-    // Placeholder: wired to booking saga by user.
-    // Before navigating to confirmation, set confirmedRef.current = true
-    // so the cleanup effect does NOT clear seats.
-    // Example: confirmedRef.current = true; navigate(`/confirmation/${bookingId}`)
+    if (isExpired || isCreating || !currentEvent) return
+    dispatch(createBookingRequest({
+      eventId: currentEvent.id,
+      seatIds: selectedSeats,
+      attendeeName: form.fullName,
+      attendeeEmail: form.email,
+      attendeePhone: form.phone,
+    }))
   }
 
-  const canPay = !isExpired && form.fullName && form.email && form.cardNumber.replace(/\s/g, '').length === 16 && form.expiry.length === 5 && form.cvv.length >= 3
-
+  const canPay = !isExpired && form.fullName && form.email && form.phone
   return (
     <div className="min-h-screen bg-[oklch(0.13_0_0)] text-white">
       <div className="max-w-5xl mx-auto px-4 py-10">
@@ -202,6 +219,20 @@ function handleBack() {
                   </div>
 
                   <div className="space-y-1.5">
+                    <Label htmlFor="phone" className="text-[oklch(0.7_0_0)] text-xs">Số điện thoại</Label>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      placeholder="0912 345 678"
+                      value={form.phone}
+                      onChange={handleChange}
+                      inputMode="tel"
+                      className="bg-[oklch(0.22_0_0)] border-[oklch(0.3_0_0)] text-white placeholder:text-[oklch(0.4_0_0)] focus-visible:ring-[oklch(0.6_0.2_250)] h-10"
+                    />
+                  </div>
+
+                  {/* <div className="space-y-1.5">
                     <Label htmlFor="cardNumber" className="text-[oklch(0.7_0_0)] text-xs">Số thẻ</Label>
                     <Input
                       id="cardNumber"
@@ -240,14 +271,18 @@ function handleBack() {
                         className="bg-[oklch(0.22_0_0)] border-[oklch(0.3_0_0)] text-white placeholder:text-[oklch(0.4_0_0)] focus-visible:ring-[oklch(0.6_0.2_250)] h-10"
                       />
                     </div>
-                  </div>
+                  </div> */}
+
+                  {createError && (
+                    <p className="text-[oklch(0.7_0.15_25)] text-xs">{createError}</p>
+                  )}
 
                   <Button
                     type="submit"
-                    disabled={!canPay || isPayLoading || isExpired}
+                    disabled={!canPay || isCreating || isExpired}
                     className="w-full h-11 rounded-xl font-semibold text-sm bg-[oklch(0.6_0.2_250)] hover:bg-[oklch(0.54_0.2_250)] text-white disabled:opacity-40 gap-2 mt-2"
                   >
-                    {isPayLoading ? (
+                    {isCreating ? (
                       <>
                         <Loader2 size={15} className="animate-spin" />
                         Đang xử lý...
