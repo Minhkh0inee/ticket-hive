@@ -16,6 +16,7 @@ interface AuthState {
   refreshToken: null | string;
   loading: boolean;
   error: null | string;
+  sessionExpired: boolean;
 }
 
 const initialState: AuthState = {
@@ -24,6 +25,7 @@ const initialState: AuthState = {
   refreshToken: null,
   loading: false,
   error: null,
+  sessionExpired: false,
 };
 
 const authSlice = createSlice({
@@ -62,11 +64,16 @@ const authSlice = createSlice({
       state.user = null;
       state.accessToken = null;
       state.refreshToken = null;
+      state.sessionExpired = true;
     },
     logout(state) {
       state.user = null;
       state.accessToken = null;
       state.refreshToken = null;
+      state.sessionExpired = false;
+    },
+    clearSessionExpired(state) {
+      state.sessionExpired = false;
     },
     registerRequest(
       state,
@@ -108,6 +115,7 @@ export const {
   refreshTokenSuccess,
   refreshTokenFailed,
   logout,
+  clearSessionExpired,
   registerRequest,
   registerSuccess,
   registerFailed,

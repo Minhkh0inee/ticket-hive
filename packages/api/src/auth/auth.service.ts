@@ -75,7 +75,7 @@ export class AuthService {
       { sub: payload.id, email: payload.email },
       {
         secret: this.configService.get<string>('JWT_SECRET')!,
-        expiresIn: '15m',
+        expiresIn: '30m',
       },
     );
   }

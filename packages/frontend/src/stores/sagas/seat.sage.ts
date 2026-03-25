@@ -1,4 +1,5 @@
 import { call, put, takeLatest } from "redux-saga/effects"
+import { toast } from "sonner"
 import { fetchSeatsFailed, fetchSeatsRequest, fetchSeatsSuccess, lockSeatFailed, lockSeatRequest, lockSeatSuccess, unlockSeatRequest } from "../slices/seat.slice"
 import axiosInstance from "@/lib/axios"
 import type { AxiosResponse } from "axios"
@@ -29,7 +30,8 @@ function* seatLockWorker(action: ReturnType<typeof lockSeatRequest>) {
     )
 
     yield put(lockSeatSuccess(seatIds))
-    yield put(fetchSeatsRequest(eventId)) 
+    yield put(fetchSeatsRequest(eventId))
+    toast.success('Đặt ghế thành công!')
   } catch (err) {
     const { seatIds, eventId } = action.payload
     yield call(
@@ -41,6 +43,7 @@ function* seatLockWorker(action: ReturnType<typeof lockSeatRequest>) {
     )
     const error = err as { response?: { data?: { message?: string } } }
     yield put(lockSeatFailed(error.response?.data?.message ?? 'Failed to lock seats'))
+    toast.error(error.response?.data?.message ?? 'Không thể đặt ghế. Vui lòng thử lại.')
   }
 }
 
@@ -57,7 +60,8 @@ function* seatUnlockWorker(action: ReturnType<typeof lockSeatRequest>) {
     )
 
     yield put(lockSeatSuccess(seatIds))
-    yield put(fetchSeatsRequest(eventId)) 
+    yield put(fetchSeatsRequest(eventId))
+    toast.success('Đã hủy chọn ghế.')
   } catch (err) {
     const { seatIds, eventId } = action.payload
     yield call(
@@ -69,6 +73,7 @@ function* seatUnlockWorker(action: ReturnType<typeof lockSeatRequest>) {
     )
     const error = err as { response?: { data?: { message?: string } } }
     yield put(lockSeatFailed(error.response?.data?.message ?? 'Failed to lock seats'))
+    toast.error(error.response?.data?.message ?? 'Không thể hủy ghế. Vui lòng thử lại.')
   }
 }
 

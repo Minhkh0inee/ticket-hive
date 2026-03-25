@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Loader2, Ticket } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -11,6 +11,7 @@ import { SECTION_CONFIG } from './constants'
 import { useAppDispatch } from '@/hooks/useAppDispatch'
 import { useAppSelector } from '@/hooks/useAppSelector'
 import { lockSeatRequest } from '@/stores/slices/seat.slice'
+import { AuthRequiredDialog } from '@/components/common/AuthRequiredDialog'
 
 const MAX_SEATS = 4
 
@@ -35,9 +36,15 @@ export function SeatMapDialog({
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const { isLoading, error } = useAppSelector(s => s.seat)
+  const { user } = useAppSelector(s => s.auth)
   const lockPendingRef = useRef(false)
+  const [showAuthDialog, setShowAuthDialog] = useState(false)
 
   function handleLockingSeat() {
+    if (!user) {
+      setShowAuthDialog(true)
+      return
+    }
     lockPendingRef.current = true
     dispatch(lockSeatRequest({
       eventId: eventId,
@@ -54,6 +61,7 @@ export function SeatMapDialog({
   }, [isLoading, error, navigate])
   
   return (
+    <>
     <Dialog open onOpenChange={open => { if (!open) onClose() }}>
       <DialogContent className="bg-[oklch(0.19_0_0)] border border-[oklch(0.26_0_0)] text-white max-w-lg rounded-2xl p-0 gap-0 overflow-hidden">
 
@@ -144,5 +152,8 @@ export function SeatMapDialog({
 
       </DialogContent>
     </Dialog>
+
+    <AuthRequiredDialog open={showAuthDialog} onClose={() => setShowAuthDialog(false)} />
+  </>
   )
 }
