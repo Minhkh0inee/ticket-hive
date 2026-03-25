@@ -41,7 +41,7 @@ export function AuthRequiredDialog({ open, onClose }: AuthRequiredDialogProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <DialogFooter className="flex flex-col gap-2 sm:flex-col bg-[oklch(0.19_0_0)] border-[oklch(0.26_0_0)]">
+        <DialogFooter className="flex flex-col gap-2 sm:flex-col bg-[oklch(0.19_0_0)] border-[oklch(0.26_0_0)] px-4 pb-4">
           <Button
             onClick={handleLogin}
             className="w-full bg-[oklch(0.6_0.2_250)] hover:bg-[oklch(0.54_0.2_250)] text-white gap-2"

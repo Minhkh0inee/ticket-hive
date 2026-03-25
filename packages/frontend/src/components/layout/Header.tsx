@@ -1,21 +1,41 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Search } from 'lucide-react'
+import { Search, User, Ticket, LogOut } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { mockCategories } from '@/mocks/categories.mock'
 import { useAppSelector } from '@/hooks/useAppSelector'
+import { useAppDispatch } from '@/hooks/useAppDispatch'
+import { logout } from '@/stores/slices/auth.slice'
+import axiosInstance from '@/lib/axios'
 
 export function Header() {
   const [query, setQuery] = useState('')
   const navigate = useNavigate()
+  const dispatch = useAppDispatch()
   const user = useAppSelector((state) => state.auth.user)
   const accessToken = useAppSelector((state) => state.auth.accessToken)
   const loading = useAppSelector((state) => state.auth.loading)
   const initials = user
     ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
     : ''
+
+  function handleLogout() {
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('refreshToken')
+    delete axiosInstance.defaults.headers.common['Authorization']
+    dispatch(logout())
+    navigate('/login')
+  }
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
@@ -74,16 +94,51 @@ export function Header() {
               <div className="hidden sm:block h-4 w-20 rounded bg-gray-200" />
             </div>
           ) : user ? (
-            <div className="flex items-center gap-2.5">
-              <Avatar className="size-8">
-                <AvatarFallback className="bg-[oklch(0.6_0.2_250)] text-white text-xs font-semibold">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-              <span className="hidden sm:block text-sm font-medium text-gray-700">
-                {user.firstName}
-              </span>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2.5 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.6_0.2_250)] focus-visible:ring-offset-2">
+                  <Avatar className="size-8 cursor-pointer">
+                    <AvatarFallback className="bg-[oklch(0.6_0.2_250)] text-white text-xs font-semibold">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="hidden sm:block text-sm font-medium text-gray-700">
+                    {user.firstName}
+                  </span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-semibold text-gray-900">
+                      {user.firstName} {user.lastName}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
+                    <User className="w-4 h-4" />
+                    Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/my-tickets" className="flex items-center gap-2 cursor-pointer">
+                    <Ticket className="w-4 h-4" />
+                    My Tickets
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <>
               <Button variant="ghost" size="sm" asChild className="text-gray-700 hover:text-[oklch(0.6_0.2_250)]">

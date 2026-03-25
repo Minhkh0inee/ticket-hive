@@ -10,6 +10,8 @@ import { LoginPage } from '@/pages/LoginPage'
 import { RegisterPage } from '@/pages/RegisterPage'
 import { CheckoutPage } from '@/pages/CheckoutPage'
 import { ConfirmationPage } from '@/pages/ConfirmationPage'
+import { ProfilePage } from '@/pages/ProfilePage'
+import { MyTicketsPage } from '@/pages/MyTicketsPage'
 
 function App() {
   return (
@@ -28,6 +30,8 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/events" element={<EventsPage />} />
           <Route path="/events/:id" element={<EventDetailPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/my-tickets" element={<MyTicketsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
