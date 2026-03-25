@@ -7,7 +7,6 @@ interface HeroGalleryProps {
 
 export const HeroGallery = memo(function HeroGallery({ images, title }: HeroGalleryProps) {
   const img = Array.isArray(images) ? images[0] : images
-  console.log(img)
   return (
     <div className="relative rounded-2xl overflow-hidden h-[320px] sm:h-[380px]">
       <img

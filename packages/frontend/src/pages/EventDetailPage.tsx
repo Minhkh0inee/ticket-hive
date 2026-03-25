@@ -1,5 +1,5 @@
 import { useMemo, useCallback, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { HeroGallery } from '@/components/event-detail/HeroGallery'
@@ -14,7 +14,6 @@ import EventDetailSkeleton from '@/components/events/EventDetailSkeleton'
 import EventDetailError from '@/components/events/EventDetailError'
 import { EventSchedule } from '@/components/event-detail/schedule/EventSchedule'
 import { EventOrganizer } from '@/components/event-detail/EventOrganizer'
-import { clearSeats } from '@/stores/slices/seat.slice'
 import EventMoreSection from '@/components/event-detail/EventMoreSection'
 import EventRelatedSection from '@/components/event-detail/EventRelatedSection'
 
@@ -27,7 +26,6 @@ export function EventDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
-
   const { currentEvent, detailLoading, detailError, events } = useAppSelector(
     (state) => state.event
   )
@@ -47,11 +45,6 @@ export function EventDetailPage() {
   }, [dispatch, events.length])
 
 
-  useEffect(() => {
-    return () => {
-      dispatch(clearSeats())
-    }
-  }, [dispatch])
 
   const relatedEvents = useMemo(
     () => currentEvent

@@ -52,6 +52,7 @@ export const EventSchedule = memo(function EventSchedule({
 
       {selectedSection && (
         <SeatMapDialog
+          eventId={eventId}
           selectedSection={selectedSection}
           allRowsGrouped={allRowsGrouped}
           seats={seats}

@@ -1,4 +1,6 @@
-import { Ticket } from 'lucide-react'
+import { useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Loader2, Ticket } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { fmtPrice } from '@/lib/format'
@@ -6,6 +8,9 @@ import { SeatMapGrid } from './SeatMapGrid'
 import type { Seat, SeatSection } from '@/types/event.types'
 import { SeatChips } from './SeatChip'
 import { SECTION_CONFIG } from './constants'
+import { useAppDispatch } from '@/hooks/useAppDispatch'
+import { useAppSelector } from '@/hooks/useAppSelector'
+import { lockSeatRequest } from '@/stores/slices/seat.slice'
 
 const MAX_SEATS = 4
 
@@ -16,6 +21,7 @@ interface SeatMapDialogProps {
   selectedSeats: string[]
   totalPrice: number
   price: number
+  eventId: string
   onClose: () => void
   onSeatClick: (seatId: string, isSelected: boolean) => void
   onRemoveSeat: (seatId: string) => void
@@ -23,10 +29,30 @@ interface SeatMapDialogProps {
 
 export function SeatMapDialog({
   selectedSection, allRowsGrouped, seats, selectedSeats,
-  totalPrice, price, onClose, onSeatClick, onRemoveSeat
+  totalPrice, price, onClose, onSeatClick, onRemoveSeat, eventId
 }: SeatMapDialogProps) {
   const { Icon, label, color, bg } = SECTION_CONFIG[selectedSection]
+  const dispatch = useAppDispatch()
+  const navigate = useNavigate()
+  const { isLoading, error } = useAppSelector(s => s.seat)
+  const lockPendingRef = useRef(false)
 
+  function handleLockingSeat() {
+    lockPendingRef.current = true
+    dispatch(lockSeatRequest({
+      eventId: eventId,
+      seatIds: selectedSeats,
+    }))
+  }
+
+  useEffect(() => {
+    if (!lockPendingRef.current || isLoading) return
+    lockPendingRef.current = false
+    if (!error) {
+      navigate('/checkout')
+    }
+  }, [isLoading, error, navigate])
+  
   return (
     <Dialog open onOpenChange={open => { if (!open) onClose() }}>
       <DialogContent className="bg-[oklch(0.19_0_0)] border border-[oklch(0.26_0_0)] text-white max-w-lg rounded-2xl p-0 gap-0 overflow-hidden">
@@ -97,11 +123,21 @@ export function SeatMapDialog({
               </p>
             </div>
             <Button
-              disabled={selectedSeats.length === 0}
+              disabled={selectedSeats.length === 0 || isLoading}
+              onClick={handleLockingSeat}
               className="rounded-xl h-10 px-5 font-semibold text-sm bg-[oklch(0.6_0.2_250)] hover:bg-[oklch(0.54_0.2_250)] text-white gap-2 disabled:opacity-40"
             >
-              <Ticket size={14} aria-hidden="true" />
-              Đặt {selectedSeats.length > 0 ? `${selectedSeats.length} ghế` : 'vé'}
+              {isLoading ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" aria-hidden="true" />
+                  Đang đặt...
+                </>
+              ) : (
+                <>
+                  <Ticket size={14} aria-hidden="true" />
+                  Đặt {selectedSeats.length > 0 ? `${selectedSeats.length} ghế` : 'vé'}
+                </>
+              )}
             </Button>
           </div>
         </div>

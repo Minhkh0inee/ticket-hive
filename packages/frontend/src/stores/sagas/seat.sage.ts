@@ -1,5 +1,5 @@
 import { call, put, takeLatest } from "redux-saga/effects"
-import { fetchSeatsFailed, fetchSeatsRequest, fetchSeatsSuccess } from "../slices/seat.slice"
+import { fetchSeatsFailed, fetchSeatsRequest, fetchSeatsSuccess, lockSeatFailed, lockSeatRequest, lockSeatSuccess, unlockSeatRequest } from "../slices/seat.slice"
 import axiosInstance from "@/lib/axios"
 import type { AxiosResponse } from "axios"
 
@@ -16,7 +16,66 @@ function* fetchEventSeatsWorker(action: ReturnType<typeof fetchSeatsRequest>) {
   }
 }
 
+function* seatLockWorker(action: ReturnType<typeof lockSeatRequest>) {
+  try {
+    const { seatIds, eventId } = action.payload
+
+    yield call(
+      () => Promise.all(
+        seatIds.map(seatId =>
+          axiosInstance.post(`/seats/${seatId}/lock`, { eventId })
+        )
+      )
+    )
+
+    yield put(lockSeatSuccess(seatIds))
+    yield put(fetchSeatsRequest(eventId)) 
+  } catch (err) {
+    const { seatIds, eventId } = action.payload
+    yield call(
+      () => Promise.allSettled(
+        seatIds.map(seatId =>
+          axiosInstance.delete(`/seats/${seatId}/lock`, { data: { eventId } })
+        )
+      )
+    )
+    const error = err as { response?: { data?: { message?: string } } }
+    yield put(lockSeatFailed(error.response?.data?.message ?? 'Failed to lock seats'))
+  }
+}
+
+function* seatUnlockWorker(action: ReturnType<typeof lockSeatRequest>) {
+  try {
+    const { seatIds, eventId } = action.payload
+
+    yield call(
+      () => Promise.all(
+        seatIds.map(seatId =>
+          axiosInstance.post(`/seats/${seatId}/unlock`, { eventId })
+        )
+      )
+    )
+
+    yield put(lockSeatSuccess(seatIds))
+    yield put(fetchSeatsRequest(eventId)) 
+  } catch (err) {
+    const { seatIds, eventId } = action.payload
+    yield call(
+      () => Promise.allSettled(
+        seatIds.map(seatId =>
+          axiosInstance.delete(`/seats/${seatId}/lock`, { data: { eventId } })
+        )
+      )
+    )
+    const error = err as { response?: { data?: { message?: string } } }
+    yield put(lockSeatFailed(error.response?.data?.message ?? 'Failed to lock seats'))
+  }
+}
+
 export function* seatsWatcher() {
   yield takeLatest(fetchSeatsRequest.type, fetchEventSeatsWorker)
+  yield takeLatest(lockSeatRequest.type, seatLockWorker)
+  yield takeLatest(unlockSeatRequest.type, seatUnlockWorker)
+
 
 }
