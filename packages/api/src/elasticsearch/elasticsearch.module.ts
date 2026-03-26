@@ -1,11 +1,8 @@
-// src/elasticsearch/elasticsearch.module.ts
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { Client } from '@elastic/elasticsearch';
+import { Client } from '@opensearch-project/opensearch'; 
 import { ElasticService } from './elasticsearch.service';
 import { ELASTIC_CLIENT } from './elasticsearch.constant';
-
-
 
 @Module({
   imports: [ConfigModule],
@@ -13,8 +10,17 @@ import { ELASTIC_CLIENT } from './elasticsearch.constant';
     {
       provide: ELASTIC_CLIENT,
       useFactory: (config: ConfigService) => {
+        const nodeUrl = config.get<string>('ELASTICSEARCH_NODE');
+        
+        if (!nodeUrl) {
+           console.warn('⚠️ ELASTICSEARCH_NODE not found, falling back to local. This will fail on Railway!');
+        }
+
         return new Client({
-          node: config.get<string>('ELASTICSEARCH_NODE') ?? 'http://elasticsearch:9200',
+          node: nodeUrl ?? 'http://elasticsearch:9200',
+          ssl: {
+            rejectUnauthorized: false, 
+          },
         });
       },
       inject: [ConfigService],

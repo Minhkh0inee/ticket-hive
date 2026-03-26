@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleInit, Inject } from '@nestjs/common';
-import { Client } from '@elastic/elasticsearch';
+import { Client } from '@opensearch-project/opensearch';
 import { ELASTIC_CLIENT } from './elasticsearch.constant';
 import { Event } from 'src/event/entities/event.entity';
 import { SearchEventDto } from './dto/search-event.dto';
@@ -10,13 +10,13 @@ export class ElasticService implements OnModuleInit {
 
   constructor(@Inject(ELASTIC_CLIENT) private readonly client: Client) {}
 
-  async onModuleInit() {
+async onModuleInit() {
     try {
-      const health = await this.client.cluster.health();
-      this.logger.log(`✅ Elasticsearch connected — status: ${health.status}`);
+      const response = await this.client.cluster.health();
+      this.logger.log(`✅ Search Cluster connected — status: ${response.body.status}`);
       await this.createEventIndex();
     } catch (error) {
-      this.logger.error('❌ Elasticsearch connection failed', error);
+      this.logger.error('❌ Search Cluster connection failed', error);
     }
   }
 
@@ -24,7 +24,7 @@ export class ElasticService implements OnModuleInit {
     await this.client.index({
       index: EVENT_INDEX,
       id: event.id,
-      document: this.toDocument(event),
+      body: this.toDocument(event),
     });
   }
 
@@ -36,7 +36,7 @@ export class ElasticService implements OnModuleInit {
       this.toDocument(event),
     ]);
 
-    const result = await this.client.bulk({ operations });
+    const { body: result } = await this.client.bulk({ body: operations });
 
     if (result.errors) {
       this.logger.error('Bulk index errors:', result.items);
@@ -49,7 +49,7 @@ export class ElasticService implements OnModuleInit {
     await this.client.update({
       index: EVENT_INDEX,
       id: event.id,
-      doc: this.toDocument(event),
+      body: { doc: this.toDocument(event) },
     });
   }
 
@@ -97,19 +97,19 @@ export class ElasticService implements OnModuleInit {
       });
     }
   
-    const result = await this.client.search({
+const { body: result } = await this.client.search({
       index: EVENT_INDEX,
       from: offset,
       size: limit,
-      query: {
-        bool: {
-          must: must.length > 0 ? must : [{ match_all: {} }],
-          filter,
+      body: { // Use 'body' for the query object
+        query: {
+          bool: {
+            must: must.length > 0 ? must : [{ match_all: {} }],
+            filter,
+          },
         },
-      },
-      sort: [
-        { eventDate: { order: 'asc' } }, 
-      ],
+        sort: [{ eventDate: { order: 'asc' } }],
+      }
     });
   
     const hits = result.hits.hits;
@@ -152,27 +152,29 @@ export class ElasticService implements OnModuleInit {
 
     await this.client.indices.create({
       index: EVENT_INDEX,
-      mappings: {
-        properties: {
-          id: { type: 'keyword' },
-          title: { type: 'text', analyzer: 'standard' },
-          description: { type: 'text', analyzer: 'standard' },
-          venue: { type: 'text', analyzer: 'standard' },
-          city: { type: 'keyword' },
-          category: { type: 'keyword' },
-          eventDate: { type: 'date' },
-          bannerUrl: { type: 'keyword', index: false },
-          totalSeats: { type: 'integer' },
-          availableSeats: { type: 'integer' },
-          basePrice: { type: 'double' },
-          organizerId: { type: 'keyword' },
-          createdAt: { type: 'date' },
+      body: { 
+        mappings: {
+          properties: {
+            id: { type: 'keyword' },
+            title: { type: 'text', analyzer: 'standard' },
+            description: { type: 'text', analyzer: 'standard' },
+            venue: { type: 'text', analyzer: 'standard' },
+            city: { type: 'keyword' },
+            category: { type: 'keyword' },
+            eventDate: { type: 'date' },
+            bannerUrl: { type: 'keyword', index: false },
+            totalSeats: { type: 'integer' },
+            availableSeats: { type: 'integer' },
+            basePrice: { type: 'double' },
+            organizerId: { type: 'keyword' },
+            createdAt: { type: 'date' },
+          },
         },
-      },
-      settings: {
-        number_of_shards: 1,
-        number_of_replicas: 0,
-      },
+        settings: {
+          number_of_shards: 1,
+          number_of_replicas: 0,
+        },
+      }
     });
 
     this.logger.log(`✅ Index "${EVENT_INDEX}" created`);
