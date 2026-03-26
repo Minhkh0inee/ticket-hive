@@ -7,9 +7,14 @@
     "packages/frontend"
   ],
   "overrides": {
-    "@nestjs/core": "11.0.1",
     "@nestjs/common": "11.0.1",
-    "@nestjs/platform-express": "11.0.1"
+    "@nestjs/core": "11.0.1",
+    "@nestjs/platform-express": "11.0.1",
+    "@nestjs/microservices": "11.0.1",
+    "@nestjs/config": "4.0.3",
+    "@nestjs/jwt": "11.0.2",
+    "@nestjs/typeorm": "11.0.0",
+    "@nestjs/testing": "11.0.1"
   },
   "scripts": {
     "dev": "docker-compose up --build",
