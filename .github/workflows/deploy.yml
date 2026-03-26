@@ -77,13 +77,11 @@ jobs:
 
       - name: Deploy API service
         run: railway up --service api
-        working-directory: packages/api
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
       - name: Deploy Worker service
         run: railway up --service worker
-        working-directory: packages/worker
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
