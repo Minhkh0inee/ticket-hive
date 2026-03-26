@@ -103,3 +103,9 @@ export interface CreateBookingDto {
   attendeeEmail: string
   attendeePhone?: string
 }
+
+export interface Category {
+  id: EventCategory | 'all'
+  label: string
+  icon: string
+}

@@ -1,6 +1,5 @@
 import { CategoryBadge } from '@/components/common/CategoryBadge'
-import type { Category } from '@/mocks/categories.mock'
-import type { EventCategory } from '@/types/event.types'
+import type { Category, EventCategory } from '@/types/event.types'
 
 interface CategoryNavProps {
   categories: Category[]
