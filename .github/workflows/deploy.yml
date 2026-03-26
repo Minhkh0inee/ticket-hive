@@ -1,0 +1,144 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── Build & Check Backend ──────────────────────────────
+  build-api:
+    name: Build API
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/api
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+
+  # ── Build & Check Frontend ─────────────────────────────
+  build-frontend:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+          VITE_ENABLE_MSW: false
+
+  # ── Deploy Backend to Railway ──────────────────────────
+  deploy-api:
+    name: Deploy API to Railway
+    needs: build-api          # chỉ deploy nếu build pass
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'  # chỉ deploy khi push main
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy API
+        run: railway up --service api
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+  # ── Deploy Frontend to Vercel ──────────────────────────
+  deploy-frontend:
+    name: Deploy Frontend to Vercel
+    needs: build-frontend     # chỉ deploy nếu build pass
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Deploy Frontend
+        run: vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
+        working-directory: packages/frontend
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+```
+
+---
+
+### Setup GitHub Secrets
+
+Vào **GitHub repo → Settings → Secrets and variables → Actions → New secret**:
+
+| Secret | Lấy ở đâu |
+|---|---|
+| `RAILWAY_TOKEN` | Railway dashboard → Account Settings → Tokens |
+| `VERCEL_TOKEN` | Vercel dashboard → Settings → Tokens |
+| `VERCEL_ORG_ID` | Vercel dashboard → Settings → General |
+| `VERCEL_PROJECT_ID` | Vercel project → Settings → General |
+| `VITE_API_BASE_URL` | URL của Railway API service |
+
+---
+
+### Flow hoạt động
+```
+Push to main
+    ↓
+build-api + build-frontend chạy song song
+    ↓
+TypeScript check + build pass ✅
+    ↓
+deploy-api → Railway
+deploy-frontend → Vercel
+    ↓
+Live! 🚀
+```
+
+---
+
+### Pull Request flow (không deploy)
+```
+Open PR to main
+    ↓
+build-api + build-frontend chạy ✅
+    ↓
+Không deploy — chỉ CI check
+    ↓
+Merge PR → trigger deploy flow

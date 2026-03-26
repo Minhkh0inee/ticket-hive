@@ -6,13 +6,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Booking, BookingStatus } from './entities/bookings.entity';
-import { DataSource, In, Repository } from 'typeorm';
+import { DataSource, In, IsNull, Repository } from 'typeorm';
 import { ClientProxy } from '@nestjs/microservices';
 import { RedisService } from 'src/redis/redis.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { EventService } from 'src/event/event.service';
 import { Seat, SeatStatus } from 'src/seats/entities/seats.entity';
 import { Event } from 'src/event/entities/event.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class BookingsService {
@@ -21,6 +22,8 @@ export class BookingsService {
     private readonly redisService: RedisService,
     private readonly eventService: EventService,
     private dataSource: DataSource,
+    @InjectRepository(Booking)
+    private readonly bookingRepo: Repository<Booking>
   ) {}
 
   async createBooking(dto: CreateBookingDto, userId: string) {
@@ -66,6 +69,33 @@ export class BookingsService {
     this.publishBookingConfirmed(booking, dto, userId, totalPrice);
   
     return booking;
+  }
+
+  async getMyBookings(userId: string): Promise<Booking[]> {
+    return this.bookingRepo.find({
+      where: {
+        user: { id: userId },
+        deletedAt: IsNull(),
+      },
+      relations: ['event', 'user'],
+      order: { createdAt: 'DESC' },
+    })
+  }
+
+    async getBookingById(bookingId: string, userId: string): Promise<Booking> {
+    const booking = await this.bookingRepo.findOne({
+      where: {
+        id: bookingId,
+        user: { id: userId },
+      },
+      relations: ['event', 'user'],
+    })
+
+    if (!booking) {
+      throw new NotFoundException(`Booking ${bookingId} not found`)
+    }
+
+    return booking
   }
 
   private async validateSeatLocks(eventId: string, seatIds: string[], userId: string) {

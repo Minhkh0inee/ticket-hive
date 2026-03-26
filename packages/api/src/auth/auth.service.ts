@@ -31,7 +31,8 @@ export class AuthService {
   async register(body: RegisterDTO) {
     const user = await this.usersService.create(body);
     const accessToken = this.generateAccessToken(user);
-    return { user, accessToken };
+    const registerToken = this.generateRefreshToken(user)
+    return { user, accessToken, registerToken };
   }
 
   async login(user: User) {
@@ -74,7 +75,7 @@ export class AuthService {
       { sub: payload.id, email: payload.email },
       {
         secret: this.configService.get<string>('JWT_SECRET')!,
-        expiresIn: '15m',
+        expiresIn: '30m',
       },
     );
   }

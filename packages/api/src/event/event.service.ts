@@ -36,17 +36,58 @@ export class EventService implements OnModuleInit{
     }
 
     async findAll(paginationDto: PaginationDto): Promise<IPaginatedResult<Event>>  {
-        const { limit = 10, offset = 0 } = paginationDto;
-        const [data, total] = await this.eventRepo.findAndCount({
-            take: limit,
-            skip: offset,
-            order: { createdAt: 'DESC' }
-        })
-        return { data, total, limit, offset };
+        const { limit = 9, offset = 0, category, city, search, tag, ignoreIds, dateFilter } = paginationDto
+
+        const query = this.eventRepo.createQueryBuilder('event')
+            .where('event.deletedAt IS NULL')
+
+        if (category) {
+            query.andWhere('event.category = :category', { category })
+        }
+        if (city) {
+            query.andWhere('event.city ILIKE :city', { city: `%${city}%` })
+        }
+        if (search) {
+            query.andWhere(
+            '(event.title ILIKE :search OR event.venue ILIKE :search)',
+            { search: `%${search}%` }
+            )
+        }
+        if (tag) {
+            query.andWhere('event.tag = :tag', { tag })
+        }
+        if (ignoreIds && ignoreIds.length > 0) {
+            query.andWhere('event.id NOT IN (:...ignoreIds)', { ignoreIds })
+        }
+        if (dateFilter) {
+            const now = new Date();
+            const end = new Date(now);
+            end.setHours(23, 59, 59, 999);
+            let start: Date;
+            if (dateFilter === 'this_month') {
+                start = new Date(now.getFullYear(), now.getMonth(), 1);
+            } else {
+                const day = now.getDay();
+                const diff = day === 0 ? -6 : 1 - day;
+                start = new Date(now);
+                start.setDate(now.getDate() + diff);
+                start.setHours(0, 0, 0, 0);
+            }
+            query.andWhere('event.eventDate >= :start', { start })
+                 .andWhere('event.eventDate <= :end', { end })
+        }
+
+        const [data, total] = await query
+            .orderBy('event.eventDate', 'ASC')
+            .skip(offset)
+            .take(limit)
+            .getManyAndCount()
+
+        return { data, total, limit, offset, totalPages: Math.ceil(total / limit) }
     }
 
     async findEventById(id: string): Promise<Event>  {
-        const event = await this.eventRepo.findOne({where: {id}})
+        const event = await this.eventRepo.findOne({where: {id}, relations: ['organizer']})
         if(!event) throw new NotFoundException(`Event with ${id} not found`);
         return event
     }

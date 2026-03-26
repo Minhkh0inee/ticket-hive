@@ -12,6 +12,13 @@ export enum CategoryEnum {
     CONFERENCE ='conference'
 }
 
+export enum EventTag {
+    TRENDING = 'trending',
+    SPECIAL = 'special',
+    FEATURED = 'featured',
+    NEW = 'new',
+}
+
 @Entity()
 export class Event extends AbstractEntity {
   @Column({
@@ -52,6 +59,9 @@ export class Event extends AbstractEntity {
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   basePrice: number;
+
+  @Column({ type: 'enum', enum: EventTag, nullable: true })
+  tag: EventTag | null;
 
   @ManyToOne(() => User, (user) => user.events)
   organizer: User

@@ -2,6 +2,7 @@ import { Entity, Column, OneToMany, Index } from 'typeorm';
 import { Event } from '../../event/entities/event.entity';
 import { AbstractEntity } from '../../common/entities/abstract.entity';
 import { Booking } from '../../bookings/entities/bookings.entity';
+import { Exclude } from 'class-transformer';
 
 export enum UserRole {
     ADMIN = "admin",
@@ -24,7 +25,7 @@ export class User extends AbstractEntity {
   @Column({ unique: true, length: 100 })
   email: string;
   
-
+  @Exclude()
   @Column()
   passwordHash: string;
 

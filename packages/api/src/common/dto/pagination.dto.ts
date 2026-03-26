@@ -1,5 +1,5 @@
-import { Type } from 'class-transformer';
-import { IsInt, IsOptional, IsPositive, Max, Min } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import { IsArray, IsIn, IsInt, IsOptional, IsPositive, IsString, IsUUID, Max, Min } from 'class-validator';
 
 export class PaginationDto {
   @Type(() => Number)
@@ -14,4 +14,30 @@ export class PaginationDto {
   @Min(0)
   @IsInt()
   offset?: number;
+
+  @IsOptional()
+  @IsString()
+  category?: string;
+
+  @IsOptional()
+  @IsString()
+  city?: string;
+
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  @IsOptional()
+  @IsString()
+  tag?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsUUID('all', { each: true })
+  @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
+  ignoreIds?: string[];
+
+  @IsOptional()
+  @IsIn(['this_week', 'this_month'])
+  dateFilter?: 'this_week' | 'this_month';
 }

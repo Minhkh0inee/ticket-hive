@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 import { CreateBookingDto } from './dto/create-booking.dto';
@@ -14,7 +14,21 @@ export class BookingsController {
     @UseGuards(JwtAuthGuard)
     @Post()
     async createBooking(@Body() createBookingDto: CreateBookingDto, @CurrentUser() user: User){
-        console.log(user)
         return await this.bookingsService.createBooking(createBookingDto, user.id)
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get('my')
+    async getMyBookings(@CurrentUser() user: User) {
+        return this.bookingsService.getMyBookings(user.id)
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get(':id')
+    async getBookingById(
+        @Param('id') id: string,
+        @CurrentUser() user: User
+    ) {
+        return this.bookingsService.getBookingById(id, user.id)
     }
 }

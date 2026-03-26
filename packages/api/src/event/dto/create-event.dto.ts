@@ -4,7 +4,7 @@ import {
     IsPositive
   } from 'class-validator';
   import { Type } from 'class-transformer';
-  import { CategoryEnum } from '../entities/event.entity';
+  import { CategoryEnum, EventTag } from '../entities/event.entity';
   
   export class CreateEventDto {
     @IsString()
@@ -40,4 +40,8 @@ import {
     @IsNumber({ maxDecimalPlaces: 2 })
     @Min(0)
     basePrice: number;
+
+    @IsOptional()
+    @IsEnum(EventTag)
+    tag?: EventTag;
   }
