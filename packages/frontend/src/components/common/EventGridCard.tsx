@@ -21,7 +21,7 @@ export const EventGridCard = memo(function EventGridCard({ event }: EventGridCar
   )
 
   const formattedPrice = useMemo(() => {
-    const price = parseInt(event.basePrice, 10)
+    const price = typeof event.basePrice === 'number' ? event.basePrice : parseInt(event.basePrice, 10)
     return price === 0
       ? 'Miễn phí'
       : `Từ ${price.toLocaleString('vi-VN')}đ`
@@ -63,7 +63,7 @@ export const EventGridCard = memo(function EventGridCard({ event }: EventGridCar
             {event.title}
           </h3>
           <p
-            className={`text-sm font-medium ${parseInt(event.basePrice) === 0 ? 'text-[oklch(0.65_0.15_145)]' : 'text-[oklch(0.7_0.17_145)]'}`}
+            className={`text-sm font-medium ${event.basePrice === 0 ? 'text-[oklch(0.65_0.15_145)]' : 'text-[oklch(0.7_0.17_145)]'}`}
           >
             {formattedPrice}
           </p>

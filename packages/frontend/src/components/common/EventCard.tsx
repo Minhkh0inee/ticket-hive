@@ -15,8 +15,8 @@ function formatDate(dateStr: string) {
   })
 }
 
-function formatPrice(price: string) {
-  const num = parseInt(price, 10)
+function formatPrice(price: number | string) {
+  const num = typeof price === 'number' ? price : parseInt(price, 10)
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num)
 }
 

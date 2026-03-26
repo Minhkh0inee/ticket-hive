@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Pencil, Mail, User, Shield } from 'lucide-react'
+import { Pencil, Mail, User } from 'lucide-react'
 import { useAppSelector } from '@/hooks/useAppSelector'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'

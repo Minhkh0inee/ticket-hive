@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/form'
 import { useAppDispatch } from '@/hooks/useAppDispatch'
 import { useAppSelector } from '@/hooks/useAppSelector'
-import { loginRequest, registerRequest } from '@/stores/slices/auth.slice'
+import { registerRequest } from '@/stores/slices/auth.slice'
 import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom'
 

@@ -46,7 +46,7 @@ const TrendingCard = memo(function TrendingCard({ event, rank }: { event: Event;
   )
 
   const formattedPrice = useMemo(() => {
-    const price = parseInt(event.basePrice, 10)
+    const price = typeof event.basePrice === 'number' ? event.basePrice : parseInt(event.basePrice, 10)
     return price === 0 ? 'Miễn phí' : `Từ ${price.toLocaleString('vi-VN')}đ`
   }, [event.basePrice])
 
@@ -92,7 +92,7 @@ const TrendingCard = memo(function TrendingCard({ event, rank }: { event: Event;
           <h3 className="text-white font-semibold text-sm leading-snug line-clamp-2 min-h-[2.5rem]">
             {event.title}
           </h3>
-          <p className={`text-sm font-medium ${parseInt(event.basePrice) === 0 ? 'text-[oklch(0.65_0.15_145)]' : 'text-[oklch(0.7_0.17_145)]'}`}>
+          <p className={`text-sm font-medium ${event.basePrice === 0 ? 'text-[oklch(0.65_0.15_145)]' : 'text-[oklch(0.7_0.17_145)]'}`}>
             {formattedPrice}
           </p>
           <div className="flex items-center gap-1.5 text-[oklch(0.55_0_0)] text-xs">

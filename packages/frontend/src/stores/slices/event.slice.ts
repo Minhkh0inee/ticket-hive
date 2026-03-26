@@ -2,8 +2,6 @@ import type { Event } from "@/types/event.types";
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 
-type EventCategory = 'music' | 'sports' | 'theatre' | 'festival' | 'conference'
-
 
 interface EventState {
   events: Event[]
@@ -73,7 +71,7 @@ const eventSlice = createSlice({
       state.isLoading = false
       state.error = action.payload
     },
-    fetchEventDetailRequest: (state, action: PayloadAction<string>) => {
+    fetchEventDetailRequest: (state, _action: PayloadAction<string>) => {
       state.detailLoading = true
       state.detailError = null
       state.currentEvent = null

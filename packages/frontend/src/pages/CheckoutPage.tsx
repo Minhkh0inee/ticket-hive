@@ -119,17 +119,6 @@ export function CheckoutPage() {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
-  function handleCardNumber(e: React.ChangeEvent<HTMLInputElement>) {
-    const raw = e.target.value.replace(/\D/g, '').slice(0, 16)
-    const formatted = raw.replace(/(.{4})/g, '$1 ').trim()
-    setForm(prev => ({ ...prev, cardNumber: formatted }))
-  }
-
-  function handleExpiry(e: React.ChangeEvent<HTMLInputElement>) {
-    const raw = e.target.value.replace(/\D/g, '').slice(0, 4)
-    const formatted = raw.length > 2 ? `${raw.slice(0, 2)}/${raw.slice(2)}` : raw
-    setForm(prev => ({ ...prev, expiry: formatted }))
-  }
 
   function handlePay(e: React.FormEvent) {
     e.preventDefault()

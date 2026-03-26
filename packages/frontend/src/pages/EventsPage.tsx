@@ -17,7 +17,7 @@ export function EventsPage() {
   const [dateFilter, setDateFilter] = useState('all')
 
   const dispatch = useAppDispatch()
-  const { events, isLoading, error, pagination } = useAppSelector((state) => state.event)
+  const { events, error, pagination } = useAppSelector((state) => state.event)
 
   const categoryParam = searchParams.get('category') as EventCategory | null
   const venueParam = searchParams.get('venue')
