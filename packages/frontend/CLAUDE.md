@@ -26,35 +26,119 @@ This is the frontend package of **TicketHive**, a ticket booking platform. It's 
 
 **Stack:** React 19, Redux Toolkit + Redux Saga, Tailwind CSS v4, shadcn/ui, Vite 7, TypeScript 5
 
+**Additional libraries:** React Router DOM 7, React Hook Form + Zod, Axios, Sonner (toasts), Next Themes
+
 **Path alias:** `@` maps to `./src` (configured in both `vite.config.ts` and `tsconfig.json`).
 
 **Environment variables** (copy `.env.example` to `.env`):
-- `VITE_API_BASE_URL` — backend API base URL (default: `http://localhost:8080`)
+- `VITE_API_URL` — backend API base URL (default: `http://localhost:8080`)
 - `VITE_ENABLE_MSW` — enable Mock Service Worker for API mocking during development
 
-### Intended Directory Layout
+### Directory Layout
 ```
 src/
 ├── components/
-│   └── ui/       # shadcn/ui generated components (do not edit manually)
-├── hooks/        # Custom React hooks
-├── pages/        # Page-level components (route targets)
-├── services/     # HTTP clients / API call functions
-├── stores/       # Redux slices and sagas
-├── types/        # TypeScript type definitions
-└── mocks/        # MSW request handlers
+│   ├── auth/            # LoginForm, RegisterForm
+│   ├── common/          # AuthRequiredDialog, SessionExpiredDialog, BookingDetailDialog, CategoryBadge, ScrollToTop
+│   ├── event-detail/    # HeroGallery, EventInfoPanel, EventDescription, EventOrganizer, EventSidebar,
+│   │                    # EventSchedule, SeatMapDialog, SeatMapGrid, SectionList, SeatButton/Chip
+│   ├── events/          # EventCard, EventGridCard, EventGrid, EventFilterBar, CategoryEventRow, Pagination
+│   ├── home/            # HeroBanner, CategoryNav, EventRow, TrendingSection, CitiesSection
+│   ├── layout/          # MainLayout, Header, Footer
+│   └── ui/              # shadcn/ui generated components (do not edit manually)
+├── hooks/               # useAppDispatch, useAppSelector (typed Redux hooks)
+├── lib/                 # axios.ts (configured instance + interceptors), format.ts, utils.ts
+├── mocks/               # Mock data: events, event-detail, categories (for MSW / dev)
+├── pages/               # 9 route-level page components
+├── services/            # HTTP client functions (authService, etc.)
+├── stores/
+│   ├── slices/          # auth, event, home, seat, booking
+│   └── sagas/           # auth, event, home, seat, booking
+├── types/               # event.types.ts (Event, Seat, Booking, enums)
+└── utils/               # seat.utils.ts, applyDateFilter.ts
 ```
 
-The project is in early development (Phase 4 UI). The scaffold directories exist but most are empty — build out pages, Redux slices, sagas, and service functions as features are added.
+### Routing
+
+| Page | Path | Auth |
+|------|------|------|
+| HomePage | `/` | public |
+| EventsPage | `/events` | public |
+| EventDetailPage | `/events/:id` | public |
+| CheckoutPage | `/checkout` | public |
+| ConfirmationPage | `/confirmation/:bookingId` | public |
+| LoginPage | `/login` | public |
+| RegisterPage | `/register` | public |
+| ProfilePage | `/profile` | **protected** |
+| MyTicketsPage | `/my-tickets` | **protected** |
+
+### Redux Store Shape
+
+```ts
+{
+  auth: {
+    user: { id, email, firstName, lastName } | null
+    accessToken: string | null
+    refreshToken: string | null
+    loading: boolean
+    error: string | null
+    sessionExpired: boolean
+  }
+  event: {
+    events: Event[]
+    pagination: { total, offset, limit, totalPages }
+    isLoading: boolean
+    error: string | null
+    currentEvent: Event | null
+    detailLoading: boolean
+    detailError: string | null
+  }
+  home: {
+    [section: HomeSectionKey]: { data: Event[], loading: boolean, error: string | null }
+    // sections: featured, special, trending, newEvents, music, theatre, festival, conference, sports
+  }
+  seat: {
+    seats: Seat[]
+    selectedSeats: string[]     // max 4
+    selectedSection: SeatSection | null
+    isLoading: boolean
+    error: string | null
+    lockSuccess: boolean
+  }
+  booking: {
+    bookings: Booking[]
+    bookingsLoading: boolean
+    currentBooking: Booking | null
+    currentBookingLoading: boolean
+    isCreating: boolean
+    createError: string | null
+    createSuccess: boolean
+  }
+}
+```
+
+### Key Sagas
+
+- **auth.saga** — login (POST /auth/login + GET /auth/profile), register, token refresh
+- **event.saga** — fetch events list (with filters), fetch event detail
+- **home.saga** — sequential featured/special/trending/newEvents (dedup via ignoreIds), then parallel category fetches
+- **seat.saga** (`seat.sage.ts`) — fetch seats, lock/unlock seats (Promise.all), toast on success/error
+- **booking.saga** — create booking, fetch my bookings, fetch booking detail
+
+### HTTP Client (`lib/axios.ts`)
+
+- `baseURL` from `VITE_API_URL` env
+- Request interceptor: injects `Authorization: Bearer <token>` from Redux store
+- Response interceptor: queued token refresh on 401 — prevents concurrent refresh storms; dispatches `refreshTokenFailed` on refresh failure → triggers `sessionExpired`
 
 ### State Management Pattern
 
-Uses **Redux Toolkit** for slice/action definitions and **Redux Saga** for async side effects. Service functions in `services/` should handle raw HTTP calls; sagas in `stores/` orchestrate async flows and dispatch actions.
+Uses **Redux Toolkit** for slice/action definitions and **Redux Saga** for async side effects. Service functions in `services/` handle raw HTTP calls; sagas orchestrate async flows and dispatch actions.
 
 ### Backend Context
 
-The API runs on port 8080 and backs these domains (from prior phases):
-- Seat availability with Redis locking
+The API runs on port 8080:
+- Seat availability with Redis locking (max 4 seats per user, 10-min reservation)
 - Booking flow via RabbitMQ + email confirmation
 - Elasticsearch-powered event search
 - PostgreSQL (Neon) for persistence
@@ -82,15 +166,22 @@ The API runs on port 8080 and backs these domains (from prior phases):
 - Imports: always use path alias `@` instead of relative imports
 - UI components: use shadcn/ui as the base for all primitive components (Button, Input, Dialog, etc.) — do not build these from scratch
 - Extend shadcn components in `components/` when custom behavior is needed, never modify files inside `components/ui/` directly
-
+- Forms: React Hook Form + Zod for validation
+- Toasts: use Sonner (`import { toast } from 'sonner'`) for non-blocking feedback
+- Formatting helpers: `fmtDate`, `fmtDateRange`, `fmtPrice` from `@/lib/format` (vi-VN locale)
+- Class merging: `cn(...)` from `@/lib/utils` (clsx + tailwind-merge)
 
 ## Current Status
-Phase 4 UI — building out pages, Redux slices, sagas, and service functions.
-Backend is fully operational on port 8080.
+Phase 4 UI — core pages and Redux state are fully implemented. Remaining work: completing service layer, connecting real API responses, and any remaining page features.
+
+**Implemented:** All 9 pages, 5 Redux slices + sagas, seat selection flow, checkout with countdown, auth with token refresh, skeleton loading states, MSW mock data.
 
 ## Notes
 - Tailwind v4: do not use `@apply` with utility classes — syntax differs from v3
 - MSW is only enabled when `VITE_ENABLE_MSW=true` is set in `.env`
-- API base URL is injected via `VITE_API_BASE_URL` — never hardcode URLs in source code
+- API base URL is injected via `VITE_API_URL` — never hardcode URLs in source code
 - Use Redux Saga for all async flows — do not use `createAsyncThunk`
 - shadcn/ui components live in `@/components/ui/` — add new ones via CLI: `npx shadcn@latest add <component>`
+- Seat locking: max 4 seats, 10-minute countdown on checkout, lock/unlock via saga
+- Booking fee: 5% on subtotal + seat section price modifiers
+- `seat.saga` file is misnamed `seat.sage.ts` — keep it as-is to avoid import breakage
