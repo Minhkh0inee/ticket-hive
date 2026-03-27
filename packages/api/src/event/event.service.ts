@@ -13,6 +13,8 @@ import { SearchEventDto } from 'src/elasticsearch/dto/search-event.dto';
 @Injectable()
 export class EventService implements OnModuleInit{
     private readonly logger = new Logger(EventService.name);
+    private readonly LIST_CACHE_PREFIX = 'events_list';
+    private readonly ITEM_CACHE_PREFIX = 'event_item';
     constructor(
         @InjectRepository(Event) private readonly eventRepo: Repository<Event>,
         private readonly redisService: RedisService,
@@ -32,12 +34,27 @@ export class EventService implements OnModuleInit{
           category: categoryId ? { id: categoryId } as any : null,
         });
         const saved = await this.eventRepo.save(event);
-        await this.elasticService.indexEvent(saved);
+        await Promise.all([
+            this.elasticService.indexEvent(saved),
+            this.clearListCache() 
+        ]);
 
         return saved;
     }
 
     async findAll(paginationDto: PaginationDto): Promise<IPaginatedResult<Event>>  {
+        const cacheKey = this.generateCacheKey(paginationDto);
+        try {
+            const cachedData = await this.redisService.getEvent(cacheKey);
+            if (cachedData) {
+                this.logger.log('🔥 Cache Hit: Fetching events from Redis');
+                return JSON.parse(cachedData);
+            }
+        } catch (error) {
+            this.logger.error('Redis error:', error);
+        }
+        this.logger.log('❄️ Cache Miss: Fetching events from PostgreSQL');
+        
         const { limit = 9, offset = 0, category, city, search, tag, ignoreIds, dateFilter } = paginationDto
 
         const query = this.eventRepo.createQueryBuilder('event')
@@ -86,12 +103,21 @@ export class EventService implements OnModuleInit{
             .take(limit)
             .getManyAndCount()
 
-        return { data, total, limit, offset, totalPages: Math.ceil(total / limit) }
+        const result = { data, total, limit, offset, totalPages: Math.ceil(total / limit) };
+
+        await this.redisService.setEvent(cacheKey, JSON.stringify(result), 300);
+
+        return result;
     }
 
     async findEventById(id: string): Promise<Event>  {
+        const cacheKey = `${this.ITEM_CACHE_PREFIX}:${id}`;
+
+        const cached = await this.redisService.getEvent(cacheKey);
+        if (cached) return JSON.parse(cached);
         const event = await this.eventRepo.findOne({where: {id}, relations: ['organizer', 'category']})
         if(!event) throw new NotFoundException(`Event with ${id} not found`);
+        await this.redisService.setEvent(cacheKey, JSON.stringify(event), 3600);
         return event
     }
 
@@ -100,7 +126,11 @@ export class EventService implements OnModuleInit{
         Object.assign(event, dto);
         const saved = await this.eventRepo.save(event);
 
-        await this.elasticService.updateEvent(saved);
+        await Promise.all([
+            this.elasticService.updateEvent(saved),
+            this.redisService.setEvent(`${this.ITEM_CACHE_PREFIX}:${id}`, JSON.stringify(saved), 3600),
+            this.clearListCache()
+        ]);
       
         return saved;
     }
@@ -108,7 +138,12 @@ export class EventService implements OnModuleInit{
     async remove(id: string): Promise<void> {
         const event = await this.findEventById(id);
         await this.eventRepo.remove(event);
-        await this.elasticService.deleteEvent(id);
+        
+        await Promise.all([
+            this.elasticService.deleteEvent(id),
+            this.redisService.clearByPattern(`${this.ITEM_CACHE_PREFIX}:${id}`),
+            this.clearListCache()
+        ]);
     }
 
     async getSeatsByEventId(eventId: string): Promise<any>{
@@ -138,5 +173,21 @@ export class EventService implements OnModuleInit{
         const events = await this.eventRepo.find();
         await this.elasticService.bulkIndexEvents(events);
         this.logger.log(`✅ Synced ${events.length} events to Elasticsearch`);
-      }
+    }
+
+    private async clearListCache() {
+        await this.redisService.clearByPattern(`${this.LIST_CACHE_PREFIX}:*`);
+    }
+
+    private generateCacheKey(dto: PaginationDto): string {
+        const cleanDto = { ...dto };
+        if (cleanDto.ignoreIds) cleanDto.ignoreIds.sort(); 
+
+        const sortedKeys = Object.keys(cleanDto).sort().reduce((acc, key) => {
+            acc[key] = cleanDto[key];
+            return acc;
+        }, {});
+
+        return `${this.LIST_CACHE_PREFIX}:${JSON.stringify(sortedKeys)}`;
+    }
 }

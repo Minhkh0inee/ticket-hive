@@ -65,4 +65,25 @@ export class RedisService {
     const keys = seatIds.map((seatId) => `seat_lock:${eventId}:${seatId}`);
     return this.redis.mget(...keys);
   }
+
+  async setEvent(eventId: string, data: any, ttlSeconds: number) {
+    await this.redis.set(
+      `event:${eventId}`, 
+      JSON.stringify(data), 
+      'EX', 
+      ttlSeconds
+    );
+  }
+
+  async getEvent(eventId: string): Promise<any | null> {
+    const data = await this.redis.get(`event:${eventId}`);
+    return data ? JSON.parse(data) : null;
+  }
+
+  async clearByPattern(pattern: string) {
+    const keys = await this.redis.keys(pattern);
+    if (keys.length > 0) {
+      await this.redis.del(...keys);
+    }
+  }
 }
