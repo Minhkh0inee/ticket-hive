@@ -24,10 +24,12 @@ export class EventService implements OnModuleInit{
       }
 
     async create(dto: CreateEventDto, organizerId: string): Promise<Event>  {
+        const { categoryId, ...rest } = dto;
         const event = this.eventRepo.create({
-          ...dto,
+          ...rest,
           availableSeats: dto.totalSeats,
           organizer: { id: organizerId },
+          category: categoryId ? { id: categoryId } as any : null,
         });
         const saved = await this.eventRepo.save(event);
         await this.elasticService.indexEvent(saved);
@@ -42,7 +44,8 @@ export class EventService implements OnModuleInit{
             .where('event.deletedAt IS NULL')
 
         if (category) {
-            query.andWhere('event.category = :category', { category })
+            query.leftJoin('event.category', 'category')
+                 .andWhere('category.slug = :category', { category })
         }
         if (city) {
             query.andWhere('event.city ILIKE :city', { city: `%${city}%` })

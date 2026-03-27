@@ -12,6 +12,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { ElasticModule } from './elasticsearch/elasticsearch.module';
+import { CategoriesModule } from './categories/categories.module';
 
 @Module({
   imports: [
@@ -48,7 +49,8 @@ import { ElasticModule } from './elasticsearch/elasticsearch.module';
     CommonModule,
     UsersModule,
     RedisModule,
-    ElasticModule
+    ElasticModule,
+    CategoriesModule
   ],
   controllers: [AppController],
   providers: [AppService],

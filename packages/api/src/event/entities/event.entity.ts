@@ -1,16 +1,9 @@
 import { Seat } from '../../seats/entities/seats.entity';
 import { Booking } from '../../bookings/entities/bookings.entity';
 import { User } from '../../users/entities/user.entity';
+import { Category } from '../../categories/entities/category.entity';
 import { AbstractEntity } from '../../common/entities/abstract.entity';
-import { Entity, Column, ManyToOne, OneToMany } from 'typeorm';
-
-export enum CategoryEnum {
-    MUSIC = 'music',
-    SPORTS = 'sports',
-    THEATRE='theatre',
-    FESTIVAL = 'festival',
-    CONFERENCE ='conference'
-}
+import { Entity, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 
 export enum EventTag {
     TRENDING = 'trending',
@@ -39,11 +32,9 @@ export class Event extends AbstractEntity {
   })
   city: string;
 
-  @Column({
-    type: 'enum',
-    enum: CategoryEnum
-  })
-  category: CategoryEnum
+  @ManyToOne(() => Category, { eager: true, nullable: true })
+  @JoinColumn({ name: 'categoryId' })
+  category: Category | null
 
   @Column({ type: 'timestamptz' })
   eventDate: Date;

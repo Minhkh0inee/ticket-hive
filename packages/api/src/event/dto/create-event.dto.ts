@@ -1,29 +1,30 @@
 import {
     IsString, IsEnum, IsDate, IsNumber,
     IsOptional, IsUrl, Min, MaxLength,
-    IsPositive
+    IsPositive, IsUUID
   } from 'class-validator';
   import { Type } from 'class-transformer';
-  import { CategoryEnum, EventTag } from '../entities/event.entity';
-  
+  import { EventTag } from '../entities/event.entity';
+
   export class CreateEventDto {
     @IsString()
     @MaxLength(200)
     title: string;
-  
+
     @IsString()
     description: string;
-  
+
     @IsString()
     @MaxLength(200)
     venue: string;
-  
+
     @IsString()
     @MaxLength(100)
     city: string;
-  
-    @IsEnum(CategoryEnum)
-    category: CategoryEnum;
+
+    @IsOptional()
+    @IsUUID()
+    categoryId?: string;
   
     @IsDate()
     @Type(() => Date)

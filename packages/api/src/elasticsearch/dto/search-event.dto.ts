@@ -1,19 +1,18 @@
-import { IsOptional, IsString, IsEnum, IsNumber, Min } from 'class-validator';
+import { IsOptional, IsString, IsNumber, Min } from 'class-validator';
 import { Type } from 'class-transformer';
-import { CategoryEnum } from 'src/event/entities/event.entity';
 
 export class SearchEventDto {
   @IsOptional()
   @IsString()
-  q?: string; 
+  q?: string;
 
   @IsOptional()
   @IsString()
   city?: string;
 
   @IsOptional()
-  @IsEnum(CategoryEnum)
-  category?: CategoryEnum;
+  @IsString()
+  category?: string;
 
   @IsOptional()
   @Type(() => Number)
