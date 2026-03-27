@@ -4,6 +4,7 @@ import { eventsWatcher } from './event.saga'
 import { homeWatcher } from './home.saga'
 import { seatsWatcher } from './seat.sage'
 import { bookingWatcher } from './booking.saga'
+import { catetgoriesWatcher } from './category.sage'
 
 export function* rootSaga() {
   yield all([
@@ -12,5 +13,6 @@ export function* rootSaga() {
     homeWatcher(),
     seatsWatcher(),
     bookingWatcher(),
+    catetgoriesWatcher()
   ])
 }

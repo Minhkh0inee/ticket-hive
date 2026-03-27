@@ -1,8 +1,5 @@
-import type { EventCategory } from "../types/event.types"
-
-
 export interface Category {
-  id: EventCategory | 'all'
+  id: string
   label: string
   icon: string
 }

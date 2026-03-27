@@ -109,7 +109,7 @@ export interface CreateBookingDto {
 }
 
 export interface Category {
-  id: EventCategory | 'all'
+  id: string
   label: string
   icon: string
 }

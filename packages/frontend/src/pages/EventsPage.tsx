@@ -1,11 +1,9 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { mockCategories } from '@/mocks/categories.mock'
 import { EventFilterBar } from '@/components/events/EventFilterBar'
 import { EventGrid } from '@/components/events/EventGrid'
 import { useAppDispatch } from '@/hooks/useAppDispatch'
 import { useAppSelector } from '@/hooks/useAppSelector'
-import type { EventCategory } from '@/types/event.types'
 import { fetchEventsRequest } from '@/stores/slices/event.slice'
 import { Pagination } from '@/components/common/Pagination'
 import { applyDateFilter } from '@/utils/applyDateFilter'
@@ -18,8 +16,9 @@ export function EventsPage() {
 
   const dispatch = useAppDispatch()
   const { events, error, pagination } = useAppSelector((state) => state.event)
+  const { categories } = useAppSelector((state) => state.category)
 
-  const categoryParam = searchParams.get('category') as EventCategory | null
+  const categoryParam = searchParams.get('category') as string | null
   const venueParam = searchParams.get('venue')
   const offsetParam = Number(searchParams.get('offset')) || 0
 
@@ -37,12 +36,12 @@ export function EventsPage() {
   }, [events, dateFilter])
 
   const categoryMeta = useMemo(
-    () => (categoryParam ? mockCategories.find(c => c.id === categoryParam) : null),
+    () => (categoryParam ? categories.find(c => c.slug === categoryParam) : null),
     [categoryParam]
   )
 
   const pageTitle = useMemo(
-    () => categoryMeta?.label ?? venueParam ?? 'Tất cả sự kiện',
+    () => categoryMeta?.name ?? venueParam ?? 'Tất cả sự kiện',
     [categoryMeta, venueParam]
   )
 
@@ -73,7 +72,7 @@ export function EventsPage() {
       <p className="text-red-400">{error}</p>
     </div>
   )
-  console.log(events)
+
   return (
     <div className="min-h-screen bg-[oklch(0.145_0_0)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">

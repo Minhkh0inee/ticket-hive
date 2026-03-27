@@ -44,23 +44,23 @@ export function HomePage() {
 
         {home.music.loading
           ? <CategoryEventRowSkeleton title="Nhạc sống" />
-          : <CategoryEventRow title="Nhạc sống" events={home.music.data} href="/events?category=music" />}
+          : <CategoryEventRow title="Nhạc sống" events={home.music.data} href="/events?category=am-nhac" />}
 
         {home.theatre.loading
           ? <CategoryEventRowSkeleton title="Sân khấu & Nghệ thuật" />
-          : <CategoryEventRow title="Sân khấu & Nghệ thuật" events={home.theatre.data} href="/events?category=theatre" />}
+          : <CategoryEventRow title="Sân khấu & Nghệ thuật" events={home.theatre.data} href="/events?category=kich" />}
 
         {home.festival.loading
           ? <CategoryEventRowSkeleton title="Lễ hội" />
-          : <CategoryEventRow title="Lễ hội" events={home.festival.data} href="/events?category=festival" />}
+          : <CategoryEventRow title="Lễ hội" events={home.festival.data} href="/events?category=le-hoi" />}
 
         {home.conference.loading
           ? <CategoryEventRowSkeleton title="Hội thảo & Workshop" />
-          : <CategoryEventRow title="Hội thảo & Workshop" events={home.conference.data} href="/events?category=conference" />}
+          : <CategoryEventRow title="Hội thảo & Workshop" events={home.conference.data} href="/events?category=hoi-nghi" />}
 
         {home.sports.loading
           ? <CategoryEventRowSkeleton title="Thể thao" />
-          : <CategoryEventRow title="Thể thao" events={home.sports.data} href="/events?category=sports" />}
+          : <CategoryEventRow title="Thể thao" events={home.sports.data} href="/events?category=the-thao" />}
 
         <CitiesSection />
 
