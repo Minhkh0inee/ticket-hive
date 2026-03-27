@@ -1,4 +1,8 @@
-export type EventCategory = 'music' | 'sports' | 'theatre' | 'festival' | 'conference'
+export interface EventCategory {
+  id: string,
+  name: string,
+  slug: string
+}
 
 export interface Event {
   id: string
@@ -105,7 +109,7 @@ export interface CreateBookingDto {
 }
 
 export interface Category {
-  id: EventCategory | 'all'
+  id: string
   label: string
   icon: string
 }

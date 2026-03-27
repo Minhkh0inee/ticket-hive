@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Search, User, Ticket, LogOut } from 'lucide-react'
 import { Input } from '@/components/ui/input'
@@ -17,6 +17,7 @@ import { useAppSelector } from '@/hooks/useAppSelector'
 import { useAppDispatch } from '@/hooks/useAppDispatch'
 import { logout } from '@/stores/slices/auth.slice'
 import axiosInstance from '@/lib/axios'
+import { fetchCategoryRequest } from '@/stores/slices/category.slice'
 
 export function Header() {
   const [query, setQuery] = useState('')
@@ -25,6 +26,11 @@ export function Header() {
   const user = useAppSelector((state) => state.auth.user)
   const accessToken = useAppSelector((state) => state.auth.accessToken)
   const loading = useAppSelector((state) => state.auth.loading)
+
+  const categories = useAppSelector((state) => state.category.categories)
+  useEffect(() => {
+    dispatch(fetchCategoryRequest())
+  }, [dispatch])
   const initials = user
     ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
     : ''
@@ -76,15 +82,12 @@ export function Header() {
         </form>
 
         <nav className="hidden lg:flex items-center gap-1">
-          {mockCategories.filter((c) => c.id !== 'all').map((cat) => (
-            <Link
-              key={cat.id}
-              to={`/events?category=${cat.id}`}
-              className="px-3 py-1.5 text-sm text-gray-600 hover:text-[oklch(0.6_0.2_250)] rounded-md hover:bg-blue-50 transition-colors"
-            >
-              {cat.label}
+          {categories.filter((c) => c.id !== 'all').map((cat) => (
+            <Link key={cat.id} className="px-3 py-1.5 text-sm text-gray-600 hover:text-[oklch(0.6_0.2_250)] rounded-md hover:bg-blue-50 transition-colors" to={`/events?category=${cat.slug}`}>
+              {cat.name}
             </Link>
           ))}
+
         </nav>
 
         <div className="flex items-center gap-2 flex-shrink-0 ml-auto">

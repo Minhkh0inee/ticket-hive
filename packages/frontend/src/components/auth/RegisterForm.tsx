@@ -55,7 +55,6 @@ export function RegisterForm() {
     useEffect(() => {
     if (wasLoadingRef.current && !loading) {
       if (error) {
-        console.log(error)
         toast.error(error)
       } else {
         toast.success('Register in successfully!')

@@ -48,7 +48,7 @@ export function EventDetailPage() {
 
   const relatedEvents = useMemo(
     () => currentEvent
-      ? events.filter(e => e.category === currentEvent.category && e.id !== id).slice(0, 8)
+      ? events.filter(e => e.category.id === currentEvent.category.id && e.id !== id).slice(0, 8)
       : [],
     [currentEvent, events, id]
   )

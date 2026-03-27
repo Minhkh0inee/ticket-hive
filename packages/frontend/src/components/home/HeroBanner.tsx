@@ -97,7 +97,7 @@ function HeroCard({ event }: { event: Event }) {
       {/* Content */}
       <div className="absolute bottom-0 left-0 right-0 p-5">
         <Badge className="mb-2 bg-[oklch(0.6_0.2_250)] text-white border-0 capitalize text-xs">
-          {event.category}
+          {event.category.name}
         </Badge>
         <h3 className="text-white font-bold text-lg leading-snug line-clamp-2 mb-1">
           {event.title}

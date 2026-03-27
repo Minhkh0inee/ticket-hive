@@ -132,7 +132,7 @@ const { body: result } = await this.client.search({
       description: event.description,
       venue: event.venue,
       city: event.city,
-      category: event.category,
+      category: event.category?.slug ?? null,
       eventDate: event.eventDate,
       bannerUrl: event.bannerUrl,
       totalSeats: event.totalSeats,

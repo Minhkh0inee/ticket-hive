@@ -17,7 +17,7 @@ const EventRelatedSection: React.FC<EventRelatedSectionProps> = ({category, rela
                 Có thể bạn cũng thích
               </h2>
               <Link
-                to={`/events?category=${category}`}
+                to={`/events?category=${category.slug}`}
                 className="text-[oklch(0.6_0.2_250)] text-sm hover:underline flex items-center gap-1"
               >
                 Xem tất cả <ChevronRight size={14} aria-hidden="true" />

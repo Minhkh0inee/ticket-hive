@@ -24,10 +24,12 @@ export class EventService implements OnModuleInit{
       }
 
     async create(dto: CreateEventDto, organizerId: string): Promise<Event>  {
+        const { categoryId, ...rest } = dto;
         const event = this.eventRepo.create({
-          ...dto,
+          ...rest,
           availableSeats: dto.totalSeats,
           organizer: { id: organizerId },
+          category: categoryId ? { id: categoryId } as any : null,
         });
         const saved = await this.eventRepo.save(event);
         await this.elasticService.indexEvent(saved);
@@ -39,10 +41,11 @@ export class EventService implements OnModuleInit{
         const { limit = 9, offset = 0, category, city, search, tag, ignoreIds, dateFilter } = paginationDto
 
         const query = this.eventRepo.createQueryBuilder('event')
+            .leftJoinAndSelect('event.category', 'category')
             .where('event.deletedAt IS NULL')
 
         if (category) {
-            query.andWhere('event.category = :category', { category })
+            query.andWhere('category.slug = :category', { category })
         }
         if (city) {
             query.andWhere('event.city ILIKE :city', { city: `%${city}%` })
@@ -87,7 +90,7 @@ export class EventService implements OnModuleInit{
     }
 
     async findEventById(id: string): Promise<Event>  {
-        const event = await this.eventRepo.findOne({where: {id}, relations: ['organizer']})
+        const event = await this.eventRepo.findOne({where: {id}, relations: ['organizer', 'category']})
         if(!event) throw new NotFoundException(`Event with ${id} not found`);
         return event
     }
