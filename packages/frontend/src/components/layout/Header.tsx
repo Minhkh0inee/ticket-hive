@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Search, User, Ticket, LogOut } from 'lucide-react'
-import { Input } from '@/components/ui/input'
+import { User, Ticket, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { SearchBar } from '@/components/layout/SearchBar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,7 +12,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { mockCategories } from '@/mocks/categories.mock'
 import { useAppSelector } from '@/hooks/useAppSelector'
 import { useAppDispatch } from '@/hooks/useAppDispatch'
 import { logout } from '@/stores/slices/auth.slice'
@@ -20,12 +19,11 @@ import axiosInstance from '@/lib/axios'
 import { fetchCategoryRequest } from '@/stores/slices/category.slice'
 
 export function Header() {
-  const [query, setQuery] = useState('')
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const user = useAppSelector((state) => state.auth.user)
   const accessToken = useAppSelector((state) => state.auth.accessToken)
-  const loading = useAppSelector((state) => state.auth.loading)
+  const profileLoading = useAppSelector((state) => state.auth.profileLoading)
 
   const categories = useAppSelector((state) => state.category.categories)
   useEffect(() => {
@@ -43,13 +41,6 @@ export function Header() {
     navigate('/login')
   }
 
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault()
-    if (query.trim()) {
-      navigate(`/search?q=${encodeURIComponent(query.trim())}`)
-    }
-  }
-
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-4">
@@ -62,24 +53,7 @@ export function Header() {
         </Link>
 
         {/* Search */}
-        <form onSubmit={handleSearch} className="flex-1 flex items-center gap-2 max-w-md">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search events, artists, venues..."
-              className="pl-9 h-9 text-sm bg-gray-50 border-gray-200 focus-visible:ring-[oklch(0.6_0.2_250)]"
-            />
-          </div>
-          <Button
-            type="submit"
-            size="sm"
-            className="h-9 bg-[oklch(0.6_0.2_250)] hover:bg-[oklch(0.54_0.2_250)] text-white"
-          >
-            Search
-          </Button>
-        </form>
+        <SearchBar />
 
         <nav className="hidden lg:flex items-center gap-1">
           {categories.filter((c) => c.id !== 'all').map((cat) => (
@@ -91,7 +65,7 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
-          {accessToken && loading && !user ? (
+          {accessToken && profileLoading && !user ? (
             <div className="flex items-center gap-2.5 animate-pulse">
               <div className="size-8 rounded-full bg-gray-200" />
               <div className="hidden sm:block h-4 w-20 rounded bg-gray-200" />

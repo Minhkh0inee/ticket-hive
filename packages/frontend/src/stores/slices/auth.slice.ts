@@ -15,6 +15,7 @@ interface AuthState {
   accessToken: null | string;
   refreshToken: null | string;
   loading: boolean;
+  profileLoading: boolean;
   error: null | string;
   sessionExpired: boolean;
 }
@@ -24,6 +25,7 @@ const initialState: AuthState = {
   accessToken: null,
   refreshToken: null,
   loading: false,
+  profileLoading: false,
   error: null,
   sessionExpired: false,
 };
@@ -64,6 +66,7 @@ const authSlice = createSlice({
       state.user = null;
       state.accessToken = null;
       state.refreshToken = null;
+      state.profileLoading = false;
       state.sessionExpired = true;
     },
     logout(state) {
@@ -99,12 +102,12 @@ const authSlice = createSlice({
       state.refreshToken = action.payload.refreshToken
     },
     fetchProfileRequest(state) {
-      state.loading = true
+      state.profileLoading = true
     },
     fetchProfileSuccess(state, action: PayloadAction<any>) {
-        state.loading = false
-        state.user = action.payload
-      },
+      state.profileLoading = false
+      state.user = action.payload
+    },
   },
 });
 

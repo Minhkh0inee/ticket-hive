@@ -17,6 +17,11 @@ interface EventState {
   currentEvent: Event | null
   detailLoading: boolean
   detailError: string | null
+
+  searchResults: Event[]
+  searchLoading: boolean
+  searchError: string | null
+  searchQuery: string
 }
 
 const initialState: EventState = {
@@ -32,6 +37,11 @@ const initialState: EventState = {
   currentEvent: null,
   detailLoading: false,
   detailError: null,
+
+  searchResults: [],
+  searchLoading: false,
+  searchError: null,
+  searchQuery: '',
 };
 
 const eventSlice = createSlice({
@@ -94,9 +104,27 @@ const eventSlice = createSlice({
     clearCurrentEvent: (state) => {
       state.currentEvent = null
       state.detailError = null
-    }
+    },
+    searchEventsRequest(state, action: PayloadAction<string>) {
+    state.searchLoading = true
+    state.searchError = null
+    state.searchQuery = action.payload
+    },
+    searchEventsSuccess(state, action: PayloadAction<Event[]>) {
+      state.searchLoading = false
+      state.searchResults = action.payload
+    },
+    searchEventsFailed(state, action: PayloadAction<string>) {
+      state.searchLoading = false
+      state.searchError = action.payload
+    },
+    clearSearch(state) {
+      state.searchResults = []
+      state.searchQuery = ''
+      state.searchError = null
+    },
   },
 });
 
-export const { fetchEventsRequest, fetchEventsSuccess, fetchEventsFailed, fetchEventDetailRequest, fetchEventDetailSuccess, fetchEventDetailFailed, clearCurrentEvent } = eventSlice.actions
+export const { fetchEventsRequest, fetchEventsSuccess, fetchEventsFailed, fetchEventDetailRequest, fetchEventDetailSuccess, fetchEventDetailFailed, clearCurrentEvent, searchEventsFailed, searchEventsRequest, searchEventsSuccess, clearSearch } = eventSlice.actions
 export default eventSlice.reducer
