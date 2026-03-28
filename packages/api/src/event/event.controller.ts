@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Header, Param, ParseUUIDPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { EventService } from './event.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
@@ -34,21 +34,25 @@ export class EventController {
     }
 
     @Get('featured')
+    @Header('Cache-Control', 'public, max-age=300, stale-while-revalidate=60')
     getFeatured(@Query('limit') limit = '4') {
     return this.eventService.findByTag('featured', parseInt(limit))
     }
 
     @Get('trending')
+    @Header('Cache-Control', 'public, max-age=300, stale-while-revalidate=60')
     getTrending(@Query('limit') limit = '4') {
     return this.eventService.findByTag('trending', parseInt(limit))
     }
 
     @Get('new')
+    @Header('Cache-Control', 'public, max-age=300, stale-while-revalidate=60')
     getNewest(@Query('limit') limit = '12') {
     return this.eventService.findByTag('new', parseInt(limit))
     }
 
     @Get('special')
+    @Header('Cache-Control', 'public, max-age=300, stale-while-revalidate=60')
     getSpecial(@Query('limit') limit = '12') {
     return this.eventService.findByTag('special', parseInt(limit))
     }
