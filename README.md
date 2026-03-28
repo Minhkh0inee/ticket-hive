@@ -3,21 +3,26 @@
 A full-stack ticket booking platform built as a monorepo. Users can browse events, select seats, and receive booking confirmations by email.
 
 ---
+🔗 **Live Demo:** [tickethive.minh-khoi.com](https://tickethive.minh-khoi.com)  
+🔗 **API:** [api-tickethive.minh-khoi.com](https://api-tickethive.minh-khoi.com)
+--
 
-## Tech Stack
+## 🛠 Tech Stack
 
 | Layer | Technology |
 |---|---|
 | Frontend | React 19, Vite 7, TypeScript 5 |
-| State Management | Redux Toolkit + Redux Saga |
+| State Management | Redux Toolkit + Redux-Saga |
 | Styling | Tailwind CSS v4, shadcn/ui |
 | API | NestJS 11, TypeScript 5 |
 | Database | PostgreSQL via [Neon](https://neon.tech) (TypeORM) |
-| Caching & Locking | Redis (ioredis) |
-| Search | Elasticsearch (OpenSearch) |
-| Message Queue | RabbitMQ |
+| Caching & Locking | Redis (ioredis) via Upstash |
+| Search | Elasticsearch via Bonsai.io |
+| Message Queue | RabbitMQ via CloudAMQP |
 | Email | Resend |
 | Auth | JWT (access + refresh tokens), bcrypt |
+| Deploy | Railway (API), Vercel (Frontend), Cloudflare CDN |
+| CI/CD | GitHub Actions |
 
 ---
 
