@@ -2,6 +2,7 @@ import { InjectRedis } from '@nestjs-modules/ioredis';
 import { Injectable } from '@nestjs/common';
 import Redis from 'ioredis';
 
+
 @Injectable()
 export class RedisService {
   constructor(@InjectRedis() private readonly redis: Redis) {}
@@ -66,24 +67,20 @@ export class RedisService {
     return this.redis.mget(...keys);
   }
 
-  async setEvent(eventId: string, data: any, ttlSeconds: number) {
-    await this.redis.set(
-      `event:${eventId}`, 
-      JSON.stringify(data), 
-      'EX', 
-      ttlSeconds
-    );
+  async get(key: string): Promise<string | null> {
+    return this.redis.get(key)
   }
 
-  async getEvent(eventId: string): Promise<any | null> {
-    const data = await this.redis.get(`event:${eventId}`);
-    return data ? JSON.parse(data) : null;
+  async set(key: string, value: string, ttlSeconds: number): Promise<void> {
+    await this.redis.set(key, value, 'EX', ttlSeconds)
   }
 
-  async clearByPattern(pattern: string) {
-    const keys = await this.redis.keys(pattern);
-    if (keys.length > 0) {
-      await this.redis.del(...keys);
-    }
+  async del(key: string): Promise<void> {
+    await this.redis.del(key)
+  }
+
+  async clearByPattern(pattern: string): Promise<void> {
+    const keys = await this.redis.keys(pattern)
+    if (keys.length > 0) await this.redis.del(...keys)
   }
 }

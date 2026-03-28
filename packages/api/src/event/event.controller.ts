@@ -33,6 +33,26 @@ export class EventController {
         return this.eventService.search(dto);
     }
 
+    @Get('featured')
+    getFeatured(@Query('limit') limit = '4') {
+    return this.eventService.findByTag('featured', parseInt(limit))
+    }
+
+    @Get('trending')
+    getTrending(@Query('limit') limit = '4') {
+    return this.eventService.findByTag('trending', parseInt(limit))
+    }
+
+    @Get('new')
+    getNewest(@Query('limit') limit = '12') {
+    return this.eventService.findByTag('new', parseInt(limit))
+    }
+
+    @Get('special')
+    getSpecial(@Query('limit') limit = '12') {
+    return this.eventService.findByTag('special', parseInt(limit))
+    }
+
     
     @Get(':id')
     getEvent(@Param('id', ParseUUIDPipe) id: string) {
