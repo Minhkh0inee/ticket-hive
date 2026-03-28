@@ -37,7 +37,7 @@ export function EventsPage() {
 
   const categoryMeta = useMemo(
     () => (categoryParam ? categories.find(c => c.slug === categoryParam) : null),
-    [categoryParam]
+    [categoryParam, categories]
   )
 
   const pageTitle = useMemo(
