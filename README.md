@@ -17,7 +17,7 @@ A full-stack ticket booking platform built as a monorepo. Users can browse event
 | API | NestJS 11, TypeScript 5 |
 | Database | PostgreSQL via [Neon](https://neon.tech) (TypeORM) |
 | Caching & Locking | Redis (ioredis) via Upstash |
-| Search | Elasticsearch via Bonsai.io |
+| Search | Elasticsearch (OpenSearch via Bonsai.io) |
 | Message Queue | RabbitMQ via CloudAMQP |
 | Email | Resend |
 | Auth | JWT (access + refresh tokens), bcrypt |
