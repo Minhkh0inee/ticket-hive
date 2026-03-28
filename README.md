@@ -1,37 +1,69 @@
 # TicketHive
 
-A ticket management and sales platform. The project is structured as a monorepo with three services: a REST API, a background worker, and a React frontend.
+A full-stack ticket booking platform built as a monorepo. Users can browse events, select seats, and receive booking confirmations by email.
 
-## What's inside
+---
 
-| Package | Tech | Purpose |
-|---|---|---|
-| `packages/api` | NestJS | HTTP API server |
-| `packages/worker` | NestJS | Background job processor |
-| `packages/frontend` | React + Vite | Web UI |
+## Tech Stack
 
-Supporting infrastructure (managed via Docker):
+| Layer | Technology |
+|---|---|
+| Frontend | React 19, Vite 7, TypeScript 5 |
+| State Management | Redux Toolkit + Redux Saga |
+| Styling | Tailwind CSS v4, shadcn/ui |
+| API | NestJS 11, TypeScript 5 |
+| Database | PostgreSQL via [Neon](https://neon.tech) (TypeORM) |
+| Caching & Locking | Redis (ioredis) |
+| Search | Elasticsearch (OpenSearch) |
+| Message Queue | RabbitMQ |
+| Email | Resend |
+| Auth | JWT (access + refresh tokens), bcrypt |
 
-- **PostgreSQL** (Neon cloud) — primary database
-- **Redis** — caching and seat locking
-- **Elasticsearch** — search
-- **RabbitMQ** — message queue between API and Worker
+---
+
+## Architecture
+
+```
+Browser
+  └── React SPA (Vite, port 5173)
+        └── Redux Saga → Axios (JWT interceptor)
+              └── NestJS REST API (port 8080)
+                    ├── PostgreSQL / Neon ── persistent data
+                    ├── Redis              ── seat locking (5-min TTL), event cache
+                    ├── Elasticsearch      ── full-text event search
+                    └── RabbitMQ           ── async booking events
+                                                └── NestJS Worker
+                                                      └── Resend ── confirmation emails
+```
+
+### Packages
+
+| Package | Role |
+|---|---|
+| `packages/api` | NestJS HTTP server — auth, events, seats, bookings, categories |
+| `packages/worker` | NestJS microservice — consumes RabbitMQ booking events, sends emails |
+| `packages/frontend` | React SPA — all UI, Redux store, sagas |
+
+### Key Flows
+
+- **Seat selection** — seats are locked in Redis for 5 minutes while a user checks out; max 4 seats per booking
+- **Booking** — API persists the booking to PostgreSQL, then publishes an event to RabbitMQ; the Worker picks it up and sends an email via Resend asynchronously
+- **Search** — events are indexed to Elasticsearch on create/update; `GET /events/search` queries it
+- **Auth** — short-lived access token + long-lived refresh token; the frontend intercepts 401s, queues concurrent requests, and replays them after a silent token refresh
 
 ---
 
 ## Prerequisites
 
-Make sure you have these installed before you start:
-
 - [Node.js 20+](https://nodejs.org/)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-- A free [Neon](https://neon.tech) account for the PostgreSQL database
+- A free [Neon](https://neon.tech) account for PostgreSQL
 
 ---
 
-## Getting started
+## Setup Guide
 
-### 1. Clone the repo and install dependencies
+### 1. Clone and install
 
 ```bash
 git clone <repo-url>
@@ -39,51 +71,60 @@ cd tickethive
 npm install
 ```
 
-### 2. Set up environment variables
-
-Copy the example file and fill in your values:
+### 2. Configure environment variables
 
 ```bash
 cp .env.example .env
 ```
 
-Open `.env` and update at minimum:
+Edit `.env` — the only values you must change:
 
 ```env
-# Get this from your Neon project dashboard
-DATABASE_URL=postgresql://username:password@ep-xxxx.us-east-1.aws.neon.tech/tickethive?sslmode=require
+# From your Neon project dashboard
+DATABASE_URL=postgresql://user:pass@ep-xxxx.us-east-1.aws.neon.tech/tickethive?sslmode=require
 
-# Generate two long random strings (e.g. run: openssl rand -hex 32)
-JWT_SECRET=your_super_secret_jwt_key_here
-JWT_REFRESH_SECRET=your_super_secret_refresh_key_here
+# Generate with: openssl rand -hex 32
+JWT_SECRET=...
+JWT_REFRESH_SECRET=...
+
+# Optional — for booking confirmation emails (https://resend.com)
+RESEND_API_KEY=...
 ```
 
-The other values (Redis, Elasticsearch, RabbitMQ) point to the Docker containers and can stay as-is.
+All other values (Redis, RabbitMQ, Elasticsearch) are pre-configured to match the Docker containers.
 
-### 3. Start everything
+### 3. Run database migrations
+
+```bash
+npm run migration:run --workspace=packages/api
+```
+
+Optionally seed the database with sample data:
+
+```bash
+npm run seed --workspace=packages/api
+```
+
+### 4. Start all services
 
 ```bash
 npm run dev
 ```
 
-This runs `docker-compose up --build`, which starts all services. The first run will take a few minutes while Docker pulls images and builds the containers.
-
-Once running:
+This runs `docker-compose up --build` and starts everything. First run takes a few minutes while Docker pulls images.
 
 | Service | URL |
 |---|---|
 | Frontend | http://localhost:5173 |
 | API | http://localhost:8080 |
-| RabbitMQ dashboard | http://localhost:15672 (guest / guest) |
+| RabbitMQ dashboard | http://localhost:15672 — `guest` / `guest` |
 | Elasticsearch | http://localhost:9200 |
 
-All three application services support **hot reload** — edit files under any `src/` folder and changes apply instantly without restarting Docker.
+All services support **hot reload** — changes under any `src/` folder apply instantly.
 
----
+### Running services individually
 
-## Running services individually (without Docker)
-
-If you prefer to run services locally, start the infrastructure containers first (Redis, Elasticsearch, RabbitMQ), then run each service separately:
+To run without Docker (infrastructure containers must already be running):
 
 ```bash
 npm run dev:api        # API on :8080
@@ -93,39 +134,50 @@ npm run dev:frontend   # Frontend on :5173
 
 ---
 
-## Other useful commands
+## Common Commands
 
 ```bash
-# Run tests for the API
+# Tests (API)
 npm run test --workspace=packages/api
-
-# Run tests in watch mode
 npm run test:watch --workspace=packages/api
-
-# Generate a coverage report
 npm run test:cov --workspace=packages/api
 
-# Lint & auto-fix
+# Lint
 npm run lint --workspace=packages/api
 npm run lint --workspace=packages/frontend
 
-# Format with Prettier
-npm run format --workspace=packages/api
+# Database
+npm run migration:generate --workspace=packages/api
+npm run migration:run --workspace=packages/api
+npm run seed --workspace=packages/api
 ```
 
 ---
 
-## Project structure
+## Project Structure
 
 ```
 tickethive/
-├── docker-compose.yml       # Starts all services together
+├── docker-compose.yml       # Full local stack
 ├── .env.example             # Environment variable template
-├── db/
-│   ├── migrations/          # Database migration files
-│   └── seeds/               # Database seed files
 └── packages/
-    ├── api/                 # NestJS API (src/, test/)
-    ├── worker/              # NestJS Worker (src/, test/)
-    └── frontend/            # React app (src/)
+    ├── api/                 # NestJS API
+    │   └── src/
+    │       ├── auth/        # JWT auth, Passport strategies
+    │       ├── event/       # Event CRUD + caching + search indexing
+    │       ├── seats/       # Seat fetch + Redis locking
+    │       ├── bookings/    # Booking creation + RabbitMQ publish
+    │       ├── categories/  # Event categories
+    │       ├── elasticsearch/
+    │       ├── redis/
+    │       └── database/    # TypeORM migrations & seeds
+    ├── worker/              # NestJS RabbitMQ consumer + Resend email
+    └── frontend/            # React SPA
+        └── src/
+            ├── components/  # UI components by feature
+            ├── pages/       # 9 route-level pages
+            ├── stores/      # Redux slices + sagas
+            ├── services/    # Axios service layer
+            ├── types/       # Shared TypeScript types
+            └── lib/         # Axios instance, formatters, utilities
 ```
