@@ -13,7 +13,6 @@ import { loadHomePageRequest } from '@/stores/slices/home.slice'
 export function HomePage() {
   const dispatch = useAppDispatch()
   const home = useAppSelector(state => state.home)
-
   useEffect(() => {
     dispatch(loadHomePageRequest())
   }, [dispatch])

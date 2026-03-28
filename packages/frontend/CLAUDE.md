@@ -39,22 +39,29 @@ This is the frontend package of **TicketHive**, a ticket booking platform. It's 
 src/
 ├── components/
 │   ├── auth/            # LoginForm, RegisterForm
-│   ├── common/          # AuthRequiredDialog, SessionExpiredDialog, BookingDetailDialog, CategoryBadge, ScrollToTop
-│   ├── event-detail/    # HeroGallery, EventInfoPanel, EventDescription, EventOrganizer, EventSidebar,
-│   │                    # EventSchedule, SeatMapDialog, SeatMapGrid, SectionList, SeatButton/Chip
-│   ├── events/          # EventCard, EventGridCard, EventGrid, EventFilterBar, CategoryEventRow, Pagination
-│   ├── home/            # HeroBanner, CategoryNav, EventRow, TrendingSection, CitiesSection
-│   ├── layout/          # MainLayout, Header, Footer
-│   └── ui/              # shadcn/ui generated components (do not edit manually)
+│   ├── common/          # AuthRequiredDialog, SessionExpiredDialog, BookingDetailDialog,
+│   │                    # CategoryBadge, EventCard, EventCardSkeleton, EventGridCard,
+│   │                    # Pagination, ScrollToTop, SectionTitle
+│   ├── event-detail/    # HeroGallery, EventInfoPanel, EventDescription, EventOrganizer,
+│   │                    # EventSidebar, EventMoreSection, EventPromoBanner, EventRelatedSection
+│   │                    # schedule/: EventSchedule, SeatMapDialog, SeatMapGrid, SectionList,
+│   │                    #            SeatButton, SeatChip, useSeatMap, constants
+│   ├── events/          # CategoryEventRow, CategoryEventRowSkeleton, CitiesSection,
+│   │                    # EventDetailError, EventDetailSkeleton, EventFilterBar, EventGrid,
+│   │                    # TrendingSection, WeekendMonthSection
+│   ├── home/            # HeroBanner, HeroBannerSkeleton, CategoryNav, EventRow
+│   ├── layout/          # MainLayout, Header, Footer, SearchBar
+│   ├── ui/              # shadcn/ui generated components (do not edit manually)
+│   └── ProctectedRoute.tsx  # Route guard (note: intentional typo in filename)
 ├── hooks/               # useAppDispatch, useAppSelector (typed Redux hooks)
 ├── lib/                 # axios.ts (configured instance + interceptors), format.ts, utils.ts
-├── mocks/               # Mock data: events, event-detail, categories (for MSW / dev)
+├── mocks/               # Mock data: categories.mock.ts (for MSW / dev)
 ├── pages/               # 9 route-level page components
-├── services/            # HTTP client functions (authService, etc.)
+├── services/            # auth.service.ts
 ├── stores/
-│   ├── slices/          # auth, event, home, seat, booking
-│   └── sagas/           # auth, event, home, seat, booking
-├── types/               # event.types.ts (Event, Seat, Booking, enums)
+│   ├── slices/          # auth, event, home, seat, booking, category
+│   └── sagas/           # auth, event, home, seat.sage, booking, category.sage, rootSaga
+├── types/               # event.types.ts (Event, EventDetail, Seat, Booking, Category, enums)
 └── utils/               # seat.utils.ts, applyDateFilter.ts
 ```
 
@@ -71,6 +78,8 @@ src/
 | RegisterPage | `/register` | public |
 | ProfilePage | `/profile` | **protected** |
 | MyTicketsPage | `/my-tickets` | **protected** |
+
+Protected routes use `ProtectedRoute` component (`src/components/ProctectedRoute.tsx` — note the typo in the filename; keep it as-is).
 
 ### Redux Store Shape
 
@@ -114,6 +123,11 @@ src/
     createError: string | null
     createSuccess: boolean
   }
+  category: {
+    categories: EventCategory[]
+    isLoading: boolean
+    error: string | null
+  }
 }
 ```
 
@@ -124,6 +138,18 @@ src/
 - **home.saga** — sequential featured/special/trending/newEvents (dedup via ignoreIds), then parallel category fetches
 - **seat.saga** (`seat.sage.ts`) — fetch seats, lock/unlock seats (Promise.all), toast on success/error
 - **booking.saga** — create booking, fetch my bookings, fetch booking detail
+- **category.saga** (`category.sage.ts`) — fetch categories list (GET /categories)
+
+### Key Types (`types/event.types.ts`)
+
+- `Event` — id, title, description, venue, city, category, eventDate, bannerUrl, totalSeats, availableSeats, basePrice, organizer
+- `EventDetail` — eventId, endDate, venueAddress, bannerUrl, description, ticketTypes, organizer, isSoldOut
+- `Seat` — id, row, number, label, section, status, priceModifier, isLocked, lockedBy
+- `Booking` — id, seatIds, attendeeName, attendeeEmail, attendeePhone, totalPrice, status, user, event, createdAt
+- `Category` — id, label, icon (UI display category, distinct from `EventCategory`)
+- `EventCategory` — id, name, slug (backend category model)
+- `SeatSection` — `'floor' | 'balcony' | 'vip' | 'general'`
+- `BookingStatus` — `PENDING | CONFIRMED | CANCELLED`
 
 ### HTTP Client (`lib/axios.ts`)
 
@@ -172,9 +198,9 @@ The API runs on port 8080:
 - Class merging: `cn(...)` from `@/lib/utils` (clsx + tailwind-merge)
 
 ## Current Status
-Phase 4 UI — core pages and Redux state are fully implemented. Remaining work: completing service layer, connecting real API responses, and any remaining page features.
+Phase 4 UI complete — all pages, Redux slices/sagas, and core components are implemented. Service layer is partially connected (`auth.service.ts` exists; other services call API directly via axios in sagas).
 
-**Implemented:** All 9 pages, 5 Redux slices + sagas, seat selection flow, checkout with countdown, auth with token refresh, skeleton loading states, MSW mock data.
+**Implemented:** All 9 pages, 6 Redux slices + sagas (auth, event, home, seat, booking, category), seat selection flow, checkout with countdown, auth with token refresh, skeleton loading states, MSW mock data (categories), ProtectedRoute guard.
 
 ## Notes
 - Tailwind v4: do not use `@apply` with utility classes — syntax differs from v3
@@ -184,4 +210,5 @@ Phase 4 UI — core pages and Redux state are fully implemented. Remaining work:
 - shadcn/ui components live in `@/components/ui/` — add new ones via CLI: `npx shadcn@latest add <component>`
 - Seat locking: max 4 seats, 10-minute countdown on checkout, lock/unlock via saga
 - Booking fee: 5% on subtotal + seat section price modifiers
-- `seat.saga` file is misnamed `seat.sage.ts` — keep it as-is to avoid import breakage
+- Two saga files are intentionally misnamed with `.sage.ts` extension: `seat.sage.ts` and `category.sage.ts` — keep as-is to avoid import breakage
+- `ProtectedRoute` component file is named `ProctectedRoute.tsx` (typo) — keep as-is
