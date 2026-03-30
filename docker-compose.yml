@@ -24,6 +24,12 @@ services:
     restart: unless-stopped
     environment:
       - discovery.type=single-node
+      # ---------------------------------------------------------------------------------------
+      # WARNING: SECURITY DISABLED
+      # 'xpack.security.enabled=false' is only intended for local development.
+      # Do NOT use this in production. It disables authentication and SSL, 
+      # making your cluster accessible to anyone with network access to port 9200.
+      # ---------------------------------------------------------------------------------------
       - xpack.security.enabled=false
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
     ports:

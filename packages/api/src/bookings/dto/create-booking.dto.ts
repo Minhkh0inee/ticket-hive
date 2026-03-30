@@ -5,6 +5,7 @@ import {
   IsUUID,
   IsArray,
   ArrayMinSize,
+  ArrayMaxSize,
 } from 'class-validator';
 
 export class CreateBookingDto {
@@ -13,6 +14,7 @@ export class CreateBookingDto {
 
   @IsArray()
   @ArrayMinSize(1)
+  @ArrayMaxSize(4)
   @IsUUID('all', { each: true })
   seatIds: string[];
 

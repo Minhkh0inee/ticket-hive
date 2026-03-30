@@ -59,9 +59,12 @@ axiosInstance.interceptors.response.use(
       const refreshToken = store.getState().auth.refreshToken
 
       const response = await axiosInstance.post('/auth/refresh', { refreshToken })
-
+      
       const { accessToken, refreshToken: newRefreshToken } = response.data.data
 
+      localStorage.setItem('accessToken', accessToken)
+      localStorage.setItem('refreshToken', newRefreshToken)
+      
       store.dispatch(refreshTokenSuccess({
         accessToken,
         refreshToken: newRefreshToken,

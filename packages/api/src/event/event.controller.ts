@@ -82,6 +82,13 @@ export class EventController {
         return await this.eventService.getSeatsByEventId(id)
     }
 
+    @Post('admin/reindex')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(UserRole.ADMIN)
+    async reindexAll() {
+        return this.eventService.reIndexAll()
+    }
+
 
 
 }

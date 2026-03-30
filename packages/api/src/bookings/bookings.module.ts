@@ -25,6 +25,10 @@ import { Event } from 'src/event/entities/event.entity';
           queueOptions: {
             durable: false,
           },
+          socketOptions: {
+          heartbeatIntervalInSeconds: 60,  
+          reconnectTimeInSeconds: 5,       
+        },
         },
       },
     ]),

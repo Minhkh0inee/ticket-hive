@@ -11,7 +11,7 @@ export enum BookingStatus {
 
 @Entity()
 export class Booking extends AbstractEntity {
-  @Column({ type: 'simple-array' })
+  @Column({ type: 'jsonb' })
   seatIds: string[];
 
   @Column({ type: 'varchar' })

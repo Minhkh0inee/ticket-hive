@@ -5,6 +5,13 @@ interface LoginPayload {
   password: string;
 }
 
+interface User {
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+}
+
 interface AuthState {
   user: null | {
     id: string;
@@ -41,7 +48,7 @@ const authSlice = createSlice({
     loginSuccess(
       state,
       action: PayloadAction<{
-        user: any;
+        user: User;
         accessToken: string;
         refreshToken: string;
       }>,
