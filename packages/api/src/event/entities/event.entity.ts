@@ -59,7 +59,6 @@ export class Event extends AbstractEntity {
   @ManyToOne(() => User, (user) => user.events)
   organizer: User
 
-  @Index()
   @OneToMany(() => Seat, (seat) => seat.event)
   seats: Seat[];
 
