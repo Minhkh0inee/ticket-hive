@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToOne } from 'typeorm';
+import { Entity, Column, ManyToOne, Index } from 'typeorm';
 import { AbstractEntity } from '../../common/entities/abstract.entity';
 import { Event } from '../../event/entities/event.entity';
 
@@ -34,6 +34,7 @@ export class Seat extends AbstractEntity {
   @Column({ type: 'decimal', precision: 3, scale: 2, default: 1.0 })
   priceModifier: number;
 
+  @Index()
   @ManyToOne(() => Event, (event) => event.seats)
   event: Event;
 }

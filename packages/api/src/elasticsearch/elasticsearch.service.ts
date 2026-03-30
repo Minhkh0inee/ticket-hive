@@ -78,14 +78,18 @@ async onModuleInit() {
     }
   
     if (city) {
-      filter.push({ term: { city } });
+      filter.push({ 
+        term: { 
+          city: city.trim().toLowerCase() 
+        } 
+      });
     }
   
     if (category) {
       filter.push({ term: { category } });
     }
   
-    // filter price range
+
     if (minPrice !== undefined || maxPrice !== undefined) {
       filter.push({
         range: {

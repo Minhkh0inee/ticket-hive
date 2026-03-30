@@ -31,8 +31,8 @@ export class AuthService {
   async register(body: RegisterDTO) {
     const user = await this.usersService.create(body);
     const accessToken = this.generateAccessToken(user);
-    const registerToken = this.generateRefreshToken(user)
-    return { user, accessToken, registerToken };
+    const refreshToken = this.generateRefreshToken(user)
+    return { user, accessToken, refreshToken };
   }
 
   async login(user: User) {
@@ -55,14 +55,18 @@ export class AuthService {
   }
 
   async refresh(userId: string, refreshToken: string) {
-    const stored = await this.redisService.getRefreshToken(userId);
-    if (!stored) throw new UnauthorizedException('Refresh token expired');
+    const stored = await this.redisService.getRefreshToken(userId)
+    if (!stored) throw new UnauthorizedException('Refresh token expired')
+    if (stored !== refreshToken) throw new UnauthorizedException('Invalid refresh token')
 
-    if (stored !== refreshToken) throw new UnauthorizedException('Invalid refresh token');
+    const user = await this.usersService.findOneById(userId)
 
-    const user = await this.usersService.findOneById(userId);
-    const accessToken = this.generateAccessToken(user);
-    return { accessToken };
+    const accessToken = this.generateAccessToken(user)
+    const newRefreshToken = this.generateRefreshToken(user)
+
+    await this.redisService.setRefreshToken(user.id, newRefreshToken, 60 * 60 * 24 * 7)
+
+    return { accessToken, refreshToken: newRefreshToken }
   }
 
   async logout(userId: string) {

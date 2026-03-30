@@ -3,7 +3,7 @@ import { Booking } from '../../bookings/entities/bookings.entity';
 import { User } from '../../users/entities/user.entity';
 import { Category } from '../../categories/entities/category.entity';
 import { AbstractEntity } from '../../common/entities/abstract.entity';
-import { Entity, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, OneToMany, JoinColumn, Index } from 'typeorm';
 
 export enum EventTag {
     TRENDING = 'trending',
@@ -36,6 +36,7 @@ export class Event extends AbstractEntity {
   @JoinColumn({ name: 'categoryId' })
   category: Category | null
 
+  @Index()
   @Column({ type: 'timestamptz' })
   eventDate: Date;
 
@@ -51,12 +52,14 @@ export class Event extends AbstractEntity {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   basePrice: number;
 
+  @Index()
   @Column({ type: 'enum', enum: EventTag, nullable: true })
   tag: EventTag | null;
 
   @ManyToOne(() => User, (user) => user.events)
   organizer: User
 
+  @Index()
   @OneToMany(() => Seat, (seat) => seat.event)
   seats: Seat[];
 

@@ -26,19 +26,13 @@ const TTL = {
 }
 
 @Injectable()
-export class EventService implements OnModuleInit {
+export class EventService  {
     private readonly logger = new Logger(EventService.name);
-    private readonly LIST_CACHE_PREFIX = 'events_list';
-    private readonly ITEM_CACHE_PREFIX = 'event_item';
     constructor(
         @InjectRepository(Event) private readonly eventRepo: Repository<Event>,
         private readonly redisService: RedisService,
         private readonly elasticService: ElasticService,
     ) { }
-
-    async onModuleInit() {
-        await this.syncAllEventsToElastic();
-    }
 
     async create(dto: CreateEventDto, organizerId: string): Promise<Event> {
         const { categoryId, ...rest } = dto
@@ -183,6 +177,12 @@ export class EventService implements OnModuleInit {
         return this.elasticService.searchEvents(dto);
     }
 
+    async reIndexAll(){
+        const events = await this.eventRepo.find()
+        await this.elasticService.bulkIndexEvents(events)
+        return { message: `Reindexed ${events.length} events` }
+    }
+
     private applyDateFilter(query: any, dateFilter: string) {
         const now = new Date()
         let start: Date
@@ -218,12 +218,6 @@ export class EventService implements OnModuleInit {
         this.redisService.clearByPattern(CacheKeys.allListPattern),
         this.redisService.clearByPattern(CacheKeys.allTagPattern),
         ])
-    }
-
-    private async syncAllEventsToElastic() {
-        const events = await this.eventRepo.find()
-        await this.elasticService.bulkIndexEvents(events)
-        this.logger.log(`✅ Synced ${events.length} events to Elasticsearch`)
     }
 
 }
