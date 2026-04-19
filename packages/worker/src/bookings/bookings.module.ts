@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
-import { MailModule } from 'src/mail/mail.module';
 import { BookingConsumer } from './bookings.consumer';
-
+import { MailModule } from '../mail/mail.module';
 @Module({
   imports: [MailModule],
   controllers: [BookingConsumer]
