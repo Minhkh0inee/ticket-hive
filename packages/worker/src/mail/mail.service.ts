@@ -2,7 +2,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Resend } from 'resend';
 import { ConfigService } from '@nestjs/config';
-import BookingConfirmedPayload from 'src/interface/bookingConfirmPayload.interface';
+import BookingConfirmedPayload from '../../src/interface/bookingConfirmPayload.interface';
 
 @Injectable()
 export class MailService {
