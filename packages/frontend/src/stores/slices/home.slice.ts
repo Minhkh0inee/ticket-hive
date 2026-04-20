@@ -49,7 +49,7 @@ const homeSlice = createSlice({
   name: 'home',
   initialState,
   reducers: {
-    loadHomePageRequest(_state) {},
+    loadHomePageRequest() {},
     setSectionLoading(state, action: PayloadAction<{ section: HomeSection }>) {
       state[action.payload.section].loading = true
       state[action.payload.section].error = null

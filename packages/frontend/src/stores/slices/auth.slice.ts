@@ -44,6 +44,7 @@ const authSlice = createSlice({
     loginRequest(state, _action: PayloadAction<LoginPayload>) {
       state.loading = true;
       state.error = null;
+      void _action
     },
     loginSuccess(
       state,
@@ -96,6 +97,7 @@ const authSlice = createSlice({
     ) {
       state.loading = true;
       state.error = null;
+      void _action
     },
     registerSuccess(state) {
       state.loading = false;
@@ -111,7 +113,7 @@ const authSlice = createSlice({
     fetchProfileRequest(state) {
       state.profileLoading = true
     },
-    fetchProfileSuccess(state, action: PayloadAction<any>) {
+    fetchProfileSuccess(state, action: PayloadAction<User>) {
       state.profileLoading = false
       state.user = action.payload
     },

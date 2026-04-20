@@ -22,10 +22,8 @@ export function SearchBar() {
   const searchLoading = useAppSelector((state) => state.event.searchLoading)
 
   useEffect(() => {
-    setOpen(false)
-    setQuery('')
-    dispatch(clearSearch())
-  }, [location.pathname, dispatch])
+    dispatch(clearSearch());
+  }, [location.pathname, dispatch]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {

@@ -29,6 +29,7 @@ const seatsSlice = createSlice({
     fetchSeatsRequest: (state, _action: PayloadAction<string>) => {
       state.isLoading = true;
       state.error = null;
+      void _action
     },
     fetchSeatsSuccess: (state, action: PayloadAction<Seat[]>) => {
       state.isLoading = false;
@@ -61,6 +62,7 @@ const seatsSlice = createSlice({
     ) {
       state.isLoading = true;
       state.error = null;
+      void _action
     },
     lockSeatSuccess: (state, action: PayloadAction<string[]>) => {
       state.isLoading = false;
@@ -84,6 +86,7 @@ const seatsSlice = createSlice({
     ) {
       state.isLoading = true;
       state.error = null;
+      void _action
     },
     unlockSeatSuccess: (state, action: PayloadAction<string[]>) => {
       state.isLoading = false;

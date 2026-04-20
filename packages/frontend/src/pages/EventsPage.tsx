@@ -81,6 +81,7 @@ export function EventsPage() {
             />
 
             <EventGrid
+              key={events.length > 0 ? 'results' : 'empty'}
               events={filteredEvents}
               totalFilteredCount={pagination.total}
               onClearFilter={() => setSearchParams({})}

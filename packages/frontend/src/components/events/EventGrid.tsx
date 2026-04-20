@@ -17,11 +17,11 @@ export const EventGrid = memo(function EventGrid({ events, totalFilteredCount, o
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const sentinelRef = useRef<HTMLDivElement>(null)
-
-  // Reset when the event list changes (filter changed)
-  useEffect(() => {
-    setVisibleCount(PAGE_SIZE)
-  }, [events])
+  const [prevEvents, setPrevEvents] = useState(events);
+  if (events !== prevEvents) {
+      setPrevEvents(events);
+      setVisibleCount(PAGE_SIZE);
+  }
 
   const visibleEvents = useMemo(() => events.slice(0, visibleCount), [events, visibleCount])
   const hasMore = useMemo(() => visibleCount < events.length, [visibleCount, events.length])

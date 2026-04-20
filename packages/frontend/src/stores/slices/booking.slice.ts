@@ -38,6 +38,7 @@ const bookingSlice = createSlice({
       state.isCreating = true
       state.createError = null
       state.createSuccess = false
+      void _action
     },
     createBookingSuccess(state, action: PayloadAction<Booking>) {
       state.isCreating = false
@@ -68,6 +69,7 @@ const bookingSlice = createSlice({
     fetchBookingDetailRequest(state, _action: PayloadAction<string>) {
       state.currentBookingLoading = true
       state.currentBookingError = null
+      void _action
     },
     fetchBookingDetailSuccess(state, action: PayloadAction<Booking>) {
       state.currentBookingLoading = false

@@ -60,6 +60,7 @@ const eventSlice = createSlice({
   } | undefined>) {
     state.isLoading = true
     state.error = null
+    void _action
   },
   fetchEventsSuccess(state, action: PayloadAction<{
     data: Event[]
@@ -85,6 +86,7 @@ const eventSlice = createSlice({
       state.detailLoading = true
       state.detailError = null
       state.currentEvent = null
+      void _action
     },
     fetchEventDetailSuccess: (
       state,

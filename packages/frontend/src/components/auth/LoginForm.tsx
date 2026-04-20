@@ -49,7 +49,7 @@ export function LoginForm() {
       }
     }
     wasLoadingRef.current = loading
-  }, [loading, error])
+  }, [navigate, loading, error])
 
   function onSubmit(data: LoginFormValues) {
     dispatch(loginRequest(data))

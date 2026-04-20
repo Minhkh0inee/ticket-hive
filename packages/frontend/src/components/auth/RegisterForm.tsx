@@ -62,7 +62,7 @@ export function RegisterForm() {
       }
     }
     wasLoadingRef.current = loading
-  }, [loading, error])
+  }, [navigate, loading, error])
 
 
     function onSubmit(data: RegisterFormValues) {

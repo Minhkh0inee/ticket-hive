@@ -26,25 +26,6 @@ function* fetchHomepageBatch() {
   }
 }
 
-function* fetchTagSection(section: HomeSection, tag: string, limit: number) {
-  yield put(setSectionLoading({ section }));
-  try {
-    const response = (yield call(() =>
-      axiosInstance.get(`/events/${tag}?limit=${limit}`),
-    )) as AxiosResponse;
-    const data: Event[] = response.data.data ?? [];
-    yield put(fetchSectionSuccess({ section, data }));
-  } catch (err) {
-    const error = err as { response?: { data?: { message?: string } } };
-    yield put(
-      fetchSectionFailed({
-        section,
-        error: error.response?.data?.message ?? "Failed to load",
-      }),
-    );
-  }
-}
-
 function* fetchCategorySection(
   section: HomeSection,
   category: string,
