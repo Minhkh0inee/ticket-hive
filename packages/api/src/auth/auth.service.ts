@@ -48,7 +48,7 @@ export class AuthService {
     const isMatch = await IsMatchHashedPassword(password, user.passwordHash);
     if (!isMatch) return null;
 
-  const { passwordHash: _, ...result } = user;
+  const { passwordHash: _passwordHash, ...result } = user;
   return result as User;
   }
 

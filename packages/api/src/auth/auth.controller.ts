@@ -7,6 +7,8 @@ import { RefreshTokenGuard } from './guard/refresh-token.guard';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { User } from 'src/users/entities/user.entity';
 
+
+
 @Controller('auth')
 export class AuthController {
     constructor(
@@ -40,7 +42,7 @@ export class AuthController {
 
     @UseGuards(RefreshTokenGuard)
     @Post('refresh')
-    refresh(@CurrentUser() user: any) {
-    return this.authService.refresh(user.id, user.refreshToken);
+    refresh(@Request() req) {
+      return this.authService.refresh(req.user.id, req.user.refreshToken);
     }
 }
