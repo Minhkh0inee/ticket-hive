@@ -14,7 +14,8 @@ export class MailService {
   }
 
   async sendBookingConfirmation(payload: BookingConfirmedPayload) {
-    const { attendeeEmail, attendeeName, bookingId, seatIds, totalPrice } = payload;
+    const { attendeeEmail, attendeeName, bookingId, seatIds, totalPrice } =
+      payload;
 
     try {
       await this.resend.emails.send({
@@ -29,7 +30,9 @@ export class MailService {
         }),
       });
 
-      this.logger.log(`Email sent to ${attendeeEmail} for booking ${bookingId}`);
+      this.logger.log(
+        `Email sent to ${attendeeEmail} for booking ${bookingId}`,
+      );
     } catch (error) {
       this.logger.error(`Failed to send email to ${attendeeEmail}`, error);
       throw error;

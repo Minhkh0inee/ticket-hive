@@ -17,7 +17,7 @@ export class AppController {
   }
 
   @EventPattern('booking.confirmed')
-  async handleBookingConfirmed(@Payload() data: any) {
+  handleBookingConfirmed(@Payload() data: any) {
     console.log('✅ Worker handleBookingConfirmed nhận được:', data);
   }
 }
