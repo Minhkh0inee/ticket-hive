@@ -68,10 +68,37 @@ const homeSlice = createSlice({
       state[action.payload.section].loading = false
       state[action.payload.section].error = action.payload.error
     },
+    setHomepageLoading(state) {
+      (['featured', 'special', 'trending', 'newEvents'] as HomeSection[]).forEach(s => {
+        state[s].loading = true
+        state[s].error = null
+      })
+    },
+    setHomepageData(
+      state,
+      action: PayloadAction<{
+        featured: Event[]
+        special: Event[]
+        trending: Event[]
+        newest: Event[]
+      }>
+    ) {
+      const { featured, special, trending, newest } = action.payload
+      state.featured  = { data: featured, loading: false, error: null }
+      state.special   = { data: special,  loading: false, error: null }
+      state.trending  = { data: trending, loading: false, error: null }
+      state.newEvents = { data: newest,   loading: false, error: null }
+    },
+    setHomepageFailed(state, action: PayloadAction<string>) {
+      ;(['featured', 'special', 'trending', 'newEvents'] as HomeSection[]).forEach(s => {
+        state[s].loading = false
+        state[s].error = action.payload
+      })
+    },
   },
 })
 
 export type { HomeSection }
-export const { loadHomePageRequest, setSectionLoading, fetchSectionSuccess, fetchSectionFailed } =
+export const { loadHomePageRequest, setSectionLoading, fetchSectionSuccess, fetchSectionFailed,setHomepageData, setHomepageFailed,setHomepageLoading } =
   homeSlice.actions
 export default homeSlice.reducer

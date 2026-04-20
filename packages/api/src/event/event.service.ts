@@ -17,12 +17,15 @@ const CacheKeys = {
   eventTag:   (tag: string) => `events:tag:${tag}`,
   allListPattern: 'events:list:*',
   allTagPattern:  'events:tag:*',
+  homepage: 'events:homepage'
+
 }
 
 const TTL = {
   list:   300,   // 5 phút
   item:   3600,  // 1 giờ
   tag:    300,   // 5 phút
+  homepage: 300
 }
 
 @Injectable()
@@ -131,6 +134,30 @@ export class EventService  {
         return data
     }
 
+    async getHomepageData() {
+        const cacheKey = CacheKeys.homepage
+
+        const cached = await this.redisService.get(cacheKey)
+        if (cached) {
+            this.logger.log('🔥 Cache Hit: events:homepage')
+            return JSON.parse(cached)
+        }
+        this.logger.log('❄️ Cache Miss: events:homepage → PostgreSQL')
+
+        const [featured, trending, newest, special] = await Promise.all([
+            this.findByTag('featured', 4),
+            this.findByTag('trending', 4),
+            this.findByTag('new', 12),
+            this.findByTag('special', 12),
+        ])
+
+        const result = { featured, trending, newest, special }
+
+        await this.redisService.set(cacheKey, JSON.stringify(result), TTL.homepage)
+
+        return result
+    }
+
     async update(id: string, dto: UpdateEventDto): Promise<Event> {
         const event = await this.findEventById(id)
         Object.assign(event, dto)
@@ -217,6 +244,7 @@ export class EventService  {
         await Promise.all([
         this.redisService.clearByPattern(CacheKeys.allListPattern),
         this.redisService.clearByPattern(CacheKeys.allTagPattern),
+        this.redisService.del(CacheKeys.homepage)
         ])
     }
 

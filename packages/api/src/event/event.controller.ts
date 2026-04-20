@@ -32,6 +32,12 @@ export class EventController {
         search(@Query() dto: SearchEventDto) {
         return this.eventService.search(dto);
     }
+    
+    @Get('home-page')
+    @Header('Cache-Control', 'public, max-age=300, stale-while-revalidate=60')
+    getHomepageEvent() {
+    return this.eventService.getHomepageData()
+    }
 
     @Get('featured')
     @Header('Cache-Control', 'public, max-age=300, stale-while-revalidate=60')

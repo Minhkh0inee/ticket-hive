@@ -13,6 +13,8 @@ import { UsersModule } from './users/users.module';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { ElasticModule } from './elasticsearch/elasticsearch.module';
 import { CategoriesModule } from './categories/categories.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -28,6 +30,14 @@ import { CategoriesModule } from './categories/categories.module';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: false,
       logging: process.env.NODE_ENV === 'development'
+    }),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60000,
+          limit: 1000,
+        },
+      ],
     }),
     RedisModule.forRootAsync({
       useFactory: (config: ConfigService) => ({
@@ -53,7 +63,10 @@ import { CategoriesModule } from './categories/categories.module';
     CategoriesModule
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService,{
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },],
 })
 export class AppModule {
 }
