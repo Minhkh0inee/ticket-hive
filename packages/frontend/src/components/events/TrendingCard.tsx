@@ -1,40 +1,9 @@
 import { memo, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { Calendar } from 'lucide-react'
-import { ChevronRight } from 'lucide-react'
 import type { Event } from '@/types/event.types'
 
-interface TrendingSectionProps {
-  events: Event[]
-}
-
-export const TrendingSection = memo(function TrendingSection({ events }: TrendingSectionProps) {
-  const items = events.slice(0, 4)
-
-  return (
-    <section aria-labelledby="trending-heading">
-      <div className="flex items-center justify-between mb-4">
-        <h2 id="trending-heading" className="text-white font-bold text-lg">
-          Sự kiện xu hướng
-        </h2>
-        <Link
-          to="/events?type=trending"
-          className="text-[oklch(0.6_0.2_250)] text-sm hover:underline flex items-center gap-0.5 shrink-0"
-        >
-          Xem thêm <ChevronRight size={14} aria-hidden="true" />
-        </Link>
-      </div>
-
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {items.map((event, index) => (
-          <TrendingCard key={event.id} event={event} rank={index + 1} />
-        ))}
-      </div>
-    </section>
-  )
-})
-
-const TrendingCard = memo(function TrendingCard({ event, rank }: { event: Event; rank: number }) {
+export const TrendingCard = memo(function TrendingCard({ event, rank }: { event: Event; rank: number }) {
   const formattedDate = useMemo(
     () =>
       new Date(event.eventDate).toLocaleDateString('vi-VN', {

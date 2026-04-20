@@ -4,10 +4,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import type { Event } from '@/types/event.types'
-
-interface HeroBannerProps {
-  events: Event[]
-}
+import { useAppSelector } from '@/hooks/useAppSelector'
+import { HeroBannerSkeleton } from '../HeroBannerSkeleton'
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-GB', {
@@ -18,10 +16,11 @@ function formatDate(dateStr: string) {
   })
 }
 
-export function HeroBanner({ events }: HeroBannerProps) {
+export function HeroBanner() {
   const [current, setCurrent] = useState(0)
-  const pairs = Math.ceil(events.length / 2)
-
+  const featured = useAppSelector(state => state.home.featured) 
+  const events = featured.data || []
+  const pairs = Math.ceil(featured.data.length / 2)
   const next = useCallback(() => setCurrent((c) => (c + 1) % pairs), [pairs])
   const prev = () => setCurrent((c) => (c - 1 + pairs) % pairs)
 
@@ -32,6 +31,15 @@ export function HeroBanner({ events }: HeroBannerProps) {
 
   const left = events[current * 2]
   const right = events[current * 2 + 1]
+
+  if(featured.error){
+    return <></>
+  }
+
+    if(featured.loading) {
+    return <HeroBannerSkeleton/>
+  }
+
 
   return (
     <div className="relative">
