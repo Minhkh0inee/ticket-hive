@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react'
+import {useMemo, useCallback, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { EventFilterBar } from '@/components/events/EventFilterBar'
 import { EventGrid } from '@/components/events/EventGrid'
@@ -12,15 +12,17 @@ const LIMIT = 12
 
 export function EventsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const [dateFilter, setDateFilter] = useState('all')
-
   const dispatch = useAppDispatch()
-  const { events, error, pagination } = useAppSelector((state) => state.event)
-  const { categories } = useAppSelector((state) => state.category)
+  
+  const events = useAppSelector((state) => state.event.events)
+  const error = useAppSelector((state) => state.event.error)
+  const pagination = useAppSelector((state) => state.event.pagination)
+  const categories = useAppSelector((state) => state.category.categories)
 
-  const categoryParam = searchParams.get('category') as string | null
+  const categoryParam = searchParams.get('category')
   const venueParam = searchParams.get('venue')
   const offsetParam = Number(searchParams.get('offset')) || 0
+  const dateFilter = searchParams.get('date') || 'all' // Đưa vào URL
 
   useEffect(() => {
     dispatch(fetchEventsRequest({
@@ -31,10 +33,8 @@ export function EventsPage() {
     }))
   }, [dispatch, offsetParam, categoryParam, venueParam])
 
-  const filteredEvents = useMemo(() => {
-    return applyDateFilter(events, dateFilter)
-  }, [events, dateFilter])
-
+  const filteredEvents = useMemo(() => applyDateFilter(events, dateFilter), [events, dateFilter])
+  
   const categoryMeta = useMemo(
     () => (categoryParam ? categories.find(c => c.slug === categoryParam) : null),
     [categoryParam, categories]
@@ -45,59 +45,55 @@ export function EventsPage() {
     [categoryMeta, venueParam]
   )
 
-  const hasActiveFilter = useMemo(
-    () => !!(categoryParam || venueParam),
-    [categoryParam, venueParam]
-  )
-
-  const currentPage = Math.floor(offsetParam / LIMIT) + 1
-
   const handlePageChange = useCallback((page: number) => {
     const newOffset = (page - 1) * LIMIT
     setSearchParams((prev) => {
-      const next = new URLSearchParams(prev)
-      next.set('offset', String(newOffset))
-      return next
+      prev.set('offset', String(newOffset))
+      return prev
     })
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [setSearchParams])
 
-  const clearFilter = useCallback(() => {
-    setSearchParams({})
-    setDateFilter('all')
+  const onDateFilterChange = useCallback((val: string) => {
+    setSearchParams((prev) => {
+      prev.set('date', val)
+      prev.set('offset', '0') 
+      return prev
+    })
   }, [setSearchParams])
-
-  if (error) return (
-    <div className="min-h-screen bg-[oklch(0.145_0_0)] flex items-center justify-center">
-      <p className="text-red-400">{error}</p>
-    </div>
-  )
 
   return (
     <div className="min-h-screen bg-[oklch(0.145_0_0)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        <EventFilterBar
-          pageTitle={pageTitle}
-          filteredCount={pagination.total}
-          dateFilter={dateFilter}
-          onDateFilterChange={setDateFilter}
-          hasActiveFilter={hasActiveFilter}
-          onClearFilter={clearFilter}
-        />
+        {error ? (
+          <div className="flex items-center justify-center h-64">
+             <p className="text-red-400">{error}</p>
+          </div>
+        ) : (
+          <>
+            <EventFilterBar
+              pageTitle={pageTitle}
+              filteredCount={pagination.total}
+              dateFilter={dateFilter}
+              onDateFilterChange={onDateFilterChange}
+              hasActiveFilter={!!(categoryParam || venueParam || dateFilter !== 'all')}
+              onClearFilter={() => setSearchParams({})}
+            />
 
-        <EventGrid
-          events={filteredEvents}
-          // loading={isLoading}
-          totalFilteredCount={pagination.total}
-          onClearFilter={clearFilter}
-        />
+            <EventGrid
+              events={filteredEvents}
+              totalFilteredCount={pagination.total}
+              onClearFilter={() => setSearchParams({})}
+            />
 
-        {pagination.totalPages > 1 && (
-          <Pagination
-            currentPage={currentPage}
-            totalPages={pagination.totalPages}
-            onPageChange={handlePageChange}
-          />
+            {pagination.totalPages > 1 && (
+              <Pagination
+                currentPage={Math.floor(offsetParam / LIMIT) + 1}
+                totalPages={pagination.totalPages}
+                onPageChange={handlePageChange}
+              />
+            )}
+          </>
         )}
       </div>
     </div>

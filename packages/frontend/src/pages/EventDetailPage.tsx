@@ -26,16 +26,17 @@ export function EventDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
+  
   const { currentEvent, detailLoading, detailError, events } = useAppSelector(
     (state) => state.event
   )
 
-  const handleBack = useCallback(() => navigate(-1), [navigate])
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [id])
 
   useEffect(() => {
-    if (id) {
-      dispatch(fetchEventDetailRequest(id))
-    }
+    if (id) dispatch(fetchEventDetailRequest(id))
   }, [dispatch, id])
 
   useEffect(() => {
@@ -44,93 +45,84 @@ export function EventDetailPage() {
     }
   }, [dispatch, events.length])
 
+  const handleBack = useCallback(() => navigate(-1), [navigate])
 
-
-  const relatedEvents = useMemo(
-    () => currentEvent
-      ? events.filter(e => e.category.id === currentEvent.category.id && e.id !== id).slice(0, 8)
-      : [],
-    [currentEvent, events, id]
-  )
-
-  const moreEvents = useMemo(
-    () => events.filter(e => e.id !== id).slice(0, 4),
-    [events, id]
-  )
+  const { relatedEvents, moreEvents, viewerCount } = useMemo(() => {
+    if (!currentEvent) return { relatedEvents: [], moreEvents: [], viewerCount: 0 }
+    
+    return {
+      relatedEvents: events.filter(e => e.category.id === currentEvent.category.id && e.id !== id).slice(0, 8),
+      moreEvents: events.filter(e => e.id !== id).slice(0, 4),
+      viewerCount: deriveViewerCount(currentEvent.id)
+    }
+  }, [currentEvent, events, id])
 
   if (detailLoading) return <EventDetailSkeleton />
-
   if (detailError) return <EventDetailError detailError={detailError} />
 
-  if (!currentEvent) return (
-    <div className="min-h-screen bg-[oklch(0.145_0_0)] flex flex-col items-center justify-center gap-4">
-      <p className="text-white text-xl font-bold">Không tìm thấy sự kiện</p>
-      <Button
-        onClick={() => navigate('/events')}
-        className="bg-[oklch(0.6_0.2_250)] hover:bg-[oklch(0.54_0.2_250)] text-white rounded-xl"
-      >
-        Quay lại danh sách
-      </Button>
-    </div>
-  )
+  if (!detailLoading && !currentEvent) {
+    return (
+      <div className="min-h-screen bg-[oklch(0.145_0_0)] flex flex-col items-center justify-center gap-4">
+        <p className="text-white text-xl font-bold">Không tìm thấy sự kiện</p>
+        <Button onClick={() => navigate('/events')}>Quay lại danh sách</Button>
+      </div>
+    )
+  }
 
-  const viewerCount = deriveViewerCount(currentEvent.id)
-  const isSoldOut = currentEvent.availableSeats === 0
+  const isSoldOut = currentEvent!.availableSeats === 0
 
   return (
     <div className="min-h-screen bg-[oklch(0.145_0_0)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-
         <Button
           variant="ghost"
           size="sm"
           onClick={handleBack}
-          className="mb-6 gap-2 text-[oklch(0.55_0_0)] hover:text-white hover:bg-transparent px-0"
-          aria-label="Quay lại"
+          className="mb-6 gap-2 text-[oklch(0.55_0_0)] hover:text-white px-0"
         >
-          <ArrowLeft size={16} aria-hidden="true" />
-          Quay lại
+          <ArrowLeft size={16} /> Quay lại
         </Button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-4 mb-8">
-          <EventInfoPanel
-            title={currentEvent.title}
-            eventDate={currentEvent.eventDate}
-            venue={currentEvent.venue}
-            basePrice={String(currentEvent.basePrice)}
-            isSoldOut={isSoldOut}
-          />
-          <HeroGallery
-            images={currentEvent.bannerUrl ?? `https://picsum.photos/seed/${currentEvent.id.slice(0, 8)}/800/450`}
-            title={currentEvent.title}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 mb-10">
-          <div className="space-y-4">
-            <EventDescription text={currentEvent.description} />
-            <EventSchedule
-              eventId={id!}
-              eventDate={currentEvent.eventDate}
-              basePrice={currentEvent.basePrice}
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-4 mb-8">
+            <EventInfoPanel
+              title={currentEvent!.title}
+              eventDate={currentEvent!.eventDate}
+              venue={currentEvent!.venue}
+              basePrice={String(currentEvent!.basePrice)}
+              isSoldOut={isSoldOut}
             />
-             <EventOrganizer organizer={currentEvent.organizer} /> 
+            <HeroGallery
+              images={currentEvent!.bannerUrl ?? `https://picsum.photos/seed/${currentEvent!.id.slice(0, 8)}/800/450`}
+              title={currentEvent!.title}
+            />
           </div>
-          <aside aria-label="Thông tin thêm" className="lg:sticky lg:top-24 self-start">
-            <EventSidebar viewerCount={viewerCount} />
-          </aside>
-        </div>
 
-        {relatedEvents.length > 0 && (
-            <EventRelatedSection category={currentEvent.category} relatedEvents={relatedEvents}/>
-        )}
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 mb-10">
+            <div className="space-y-4">
+              <EventDescription text={currentEvent!.description} />
+              <EventSchedule
+                eventId={id!}
+                eventDate={currentEvent!.eventDate}
+                basePrice={currentEvent!.basePrice}
+              />
+              <EventOrganizer organizer={currentEvent!.organizer} /> 
+            </div>
+            <aside className="lg:sticky lg:top-24 self-start">
+              <EventSidebar viewerCount={viewerCount} />
+            </aside>
+          </div>
 
-        <div className="mb-10">
-          <EventPromoBanner />
-        </div>
+          {relatedEvents.length > 0 && (
+            <EventRelatedSection category={currentEvent!.category} relatedEvents={relatedEvents}/>
+          )}
 
-      <EventMoreSection moreEvents={moreEvents}/>
+          <div className="my-10">
+            <EventPromoBanner />
+          </div>
 
+          <EventMoreSection moreEvents={moreEvents}/>
+        </>
       </div>
     </div>
   )
