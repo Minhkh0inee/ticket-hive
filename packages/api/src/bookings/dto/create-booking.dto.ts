@@ -1,7 +1,6 @@
 import {
   IsString,
   IsEmail,
-  IsPhoneNumber,
   IsUUID,
   IsArray,
   ArrayMinSize,
@@ -14,7 +13,11 @@ export class CreateBookingDto {
   @IsUUID()
   eventId: string;
 
-  @ApiProperty({ example: ['uuid-seat-1', 'uuid-seat-2'], minItems: 1, maxItems: 4 })
+  @ApiProperty({
+    example: ['uuid-seat-1', 'uuid-seat-2'],
+    minItems: 1,
+    maxItems: 4,
+  })
   @IsArray()
   @ArrayMinSize(1)
   @ArrayMaxSize(4)

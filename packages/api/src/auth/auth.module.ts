@@ -15,19 +15,27 @@ import { RedisService } from 'src/redis/redis.service';
 import { RefreshTokenStrategy } from './strategy/refresh-token.strategy';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User]),    
-  JwtModule.registerAsync({
-    imports: [ConfigModule],
-    useFactory: (config: ConfigService) => ({
-      secret: config.get<string>('JWT_SECRET'),
+  imports: [
+    TypeOrmModule.forFeature([User]),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: (config: ConfigService) => ({
+        secret: config.get<string>('JWT_SECRET'),
+      }),
+      inject: [ConfigService],
     }),
-    inject: [ConfigService],
-  }),
-  UsersModule,
-  PassportModule,
-  RedisModule
+    UsersModule,
+    PassportModule,
+    RedisModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, UsersService, JwtStrategy,LocalStrategy, RedisService, RefreshTokenStrategy]
+  providers: [
+    AuthService,
+    UsersService,
+    JwtStrategy,
+    LocalStrategy,
+    RedisService,
+    RefreshTokenStrategy,
+  ],
 })
 export class AuthModule {}

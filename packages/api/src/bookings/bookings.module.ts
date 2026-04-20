@@ -26,9 +26,9 @@ import { Event } from 'src/event/entities/event.entity';
             durable: false,
           },
           socketOptions: {
-          heartbeatIntervalInSeconds: 60,  
-          reconnectTimeInSeconds: 5,       
-        },
+            heartbeatIntervalInSeconds: 60,
+            reconnectTimeInSeconds: 5,
+          },
         },
       },
     ]),

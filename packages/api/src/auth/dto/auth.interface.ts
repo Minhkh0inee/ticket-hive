@@ -1,9 +1,9 @@
 export interface IPayload {
-    id: string;
-    email: string;
+  id: string;
+  email: string;
 }
 
 export interface IRefreshTokenUser {
-    id: string;
-    refreshToken: string;
+  id: string;
+  refreshToken: string;
 }

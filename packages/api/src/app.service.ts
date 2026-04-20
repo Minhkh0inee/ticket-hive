@@ -9,7 +9,7 @@ export class AppService {
   getHealth() {
     return {
       status: 'ok',
-      timestamp: new Date()
-    }
+      timestamp: new Date(),
+    };
   }
 }

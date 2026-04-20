@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { RegisterDTO } from './dto/auth.dto';
 import { JwtService } from '@nestjs/jwt';
 import { IsMatchHashedPassword } from 'src/utils/bcrypt';
@@ -17,7 +14,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
-    private readonly redisService: RedisService
+    private readonly redisService: RedisService,
   ) {
     const refreshSecret = configService.get<string>('JWT_REFRESH_SECRET');
     const accessSecret = configService.get<string>('JWT_SECRET');
@@ -29,7 +26,7 @@ export class AuthService {
   async register(body: RegisterDTO) {
     const user = await this.usersService.create(body);
     const accessToken = this.generateAccessToken(user);
-    const refreshToken = this.generateRefreshToken(user)
+    const refreshToken = this.generateRefreshToken(user);
     return { user, accessToken, refreshToken };
   }
 
@@ -37,7 +34,11 @@ export class AuthService {
     const accessToken = this.generateAccessToken(user);
     const refreshToken = this.generateRefreshToken(user);
 
-    await this.redisService.setRefreshToken(user.id, refreshToken, 60 * 60 * 24 * 7);
+    await this.redisService.setRefreshToken(
+      user.id,
+      refreshToken,
+      60 * 60 * 24 * 7,
+    );
     return { accessToken, refreshToken };
   }
 
@@ -48,23 +49,30 @@ export class AuthService {
     const isMatch = await IsMatchHashedPassword(password, user.passwordHash);
     if (!isMatch) return null;
 
-  const { passwordHash: _passwordHash, ...result } = user;
-  return result as User;
+    const result = { ...user };
+    delete (result as Partial<User>).passwordHash;
+
+    return result as User;
   }
 
   async refresh(userId: string, refreshToken: string) {
-    const stored = await this.redisService.getRefreshToken(userId)
-    if (!stored) throw new UnauthorizedException('Refresh token expired')
-    if (stored !== refreshToken) throw new UnauthorizedException('Invalid refresh token')
+    const stored = await this.redisService.getRefreshToken(userId);
+    if (!stored) throw new UnauthorizedException('Refresh token expired');
+    if (stored !== refreshToken)
+      throw new UnauthorizedException('Invalid refresh token');
 
-    const user = await this.usersService.findOneById(userId)
+    const user = await this.usersService.findOneById(userId);
 
-    const accessToken = this.generateAccessToken(user)
-    const newRefreshToken = this.generateRefreshToken(user)
+    const accessToken = this.generateAccessToken(user);
+    const newRefreshToken = this.generateRefreshToken(user);
 
-    await this.redisService.setRefreshToken(user.id, newRefreshToken, 60 * 60 * 24 * 7)
+    await this.redisService.setRefreshToken(
+      user.id,
+      newRefreshToken,
+      60 * 60 * 24 * 7,
+    );
 
-    return { accessToken, refreshToken: newRefreshToken }
+    return { accessToken, refreshToken: newRefreshToken };
   }
 
   async logout(userId: string) {

@@ -20,7 +20,8 @@ import { APP_GUARD } from '@nestjs/core';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: process.env.NODE_ENV === 'production' ? '.env.production' : '.env',
+      envFilePath:
+        process.env.NODE_ENV === 'production' ? '.env.production' : '.env',
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
@@ -47,8 +48,8 @@ import { APP_GUARD } from '@nestjs/core';
         options: {
           tls: {
             rejectUnauthorized: false,
-          }
-        }
+          },
+        },
       }),
       inject: [ConfigService],
     }),
@@ -61,13 +62,15 @@ import { APP_GUARD } from '@nestjs/core';
     UsersModule,
     RedisModule,
     ElasticModule,
-    CategoriesModule
+    CategoriesModule,
   ],
   controllers: [AppController],
-  providers: [AppService,{
+  providers: [
+    AppService,
+    {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
-    },],
+    },
+  ],
 })
-export class AppModule {
-}
+export class AppModule {}

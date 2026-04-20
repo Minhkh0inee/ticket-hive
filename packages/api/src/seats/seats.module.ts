@@ -9,6 +9,6 @@ import { Seat } from './entities/seats.entity';
 @Module({
   imports: [RedisModule, TypeOrmModule.forFeature([Seat])],
   controllers: [SeatsController],
-  providers: [SeatsService, RedisService]
+  providers: [SeatsService, RedisService],
 })
 export class SeatsModule {}

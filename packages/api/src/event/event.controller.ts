@@ -1,4 +1,16 @@
-import { Body, Controller, Delete, Get, Header, Param, ParseUUIDPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Header,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { EventService } from './event.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
@@ -9,92 +21,96 @@ import { RolesGuard } from 'src/common/guards/role.guard';
 import { Roles } from 'src/common/decorator/role.decorator';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { SearchEventDto } from 'src/elasticsearch/dto/search-event.dto';
+import { Event } from './entities/event.entity';
+import { SeatWithLock } from './entities/homepage';
 
 @Controller('events')
 export class EventController {
-    constructor(
-        private readonly eventService: EventService
-    ){}
+  constructor(private readonly eventService: EventService) {}
 
-    @Roles(UserRole.ADMIN)
-    @UseGuards(JwtAuthGuard, RolesGuard)
-    @Post()
-    createEvent(@Body() createEventDto: CreateEventDto, @CurrentUser() user: User){
-        return this.eventService.create(createEventDto, user.id)
-    }
+  @Roles(UserRole.ADMIN)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Post()
+  createEvent(
+    @Body() createEventDto: CreateEventDto,
+    @CurrentUser() user: User,
+  ): Promise<Event> {
+    return this.eventService.create(createEventDto, user.id);
+  }
 
-    @Get()
-    getEvents(@Query() paginationDto: PaginationDto) {
-        return this.eventService.findAll(paginationDto)
-    }
+  @Get()
+  getEvents(@Query() paginationDto: PaginationDto) {
+    return this.eventService.findAll(paginationDto);
+  }
 
-    @Get('search')
-        search(@Query() dto: SearchEventDto) {
-        return this.eventService.search(dto);
-    }
-    
-    @Get('home-page')
-    @Header('Cache-Control', 'public, max-age=300, stale-while-revalidate=60')
-    getHomepageEvent() {
-    return this.eventService.getHomepageData()
-    }
+  @Get('search')
+  search(@Query() dto: SearchEventDto) {
+    return this.eventService.search(dto);
+  }
 
-    @Get('featured')
-    @Header('Cache-Control', 'public, max-age=300, stale-while-revalidate=60')
-    getFeatured(@Query('limit') limit = '4') {
-    return this.eventService.findByTag('featured', parseInt(limit))
-    }
+  @Get('home-page')
+  @Header('Cache-Control', 'public, max-age=300, stale-while-revalidate=60')
+  getHomepageEvent() {
+    return this.eventService.getHomepageData();
+  }
 
-    @Get('trending')
-    @Header('Cache-Control', 'public, max-age=300, stale-while-revalidate=60')
-    getTrending(@Query('limit') limit = '4') {
-    return this.eventService.findByTag('trending', parseInt(limit))
-    }
+  @Get('featured')
+  @Header('Cache-Control', 'public, max-age=300, stale-while-revalidate=60')
+  getFeatured(@Query('limit') limit = '4') {
+    return this.eventService.findByTag('featured', parseInt(limit));
+  }
 
-    @Get('new')
-    @Header('Cache-Control', 'public, max-age=300, stale-while-revalidate=60')
-    getNewest(@Query('limit') limit = '12') {
-    return this.eventService.findByTag('new', parseInt(limit))
-    }
+  @Get('trending')
+  @Header('Cache-Control', 'public, max-age=300, stale-while-revalidate=60')
+  getTrending(@Query('limit') limit = '4') {
+    return this.eventService.findByTag('trending', parseInt(limit));
+  }
 
-    @Get('special')
-    @Header('Cache-Control', 'public, max-age=300, stale-while-revalidate=60')
-    getSpecial(@Query('limit') limit = '12') {
-    return this.eventService.findByTag('special', parseInt(limit))
-    }
+  @Get('new')
+  @Header('Cache-Control', 'public, max-age=300, stale-while-revalidate=60')
+  getNewest(@Query('limit') limit = '12') {
+    return this.eventService.findByTag('new', parseInt(limit));
+  }
 
-    
-    @Get(':id')
-    getEvent(@Param('id', ParseUUIDPipe) id: string) {
-        return this.eventService.findEventById(id)
-    }
+  @Get('special')
+  @Header('Cache-Control', 'public, max-age=300, stale-while-revalidate=60')
+  getSpecial(@Query('limit') limit = '12') {
+    return this.eventService.findByTag('special', parseInt(limit));
+  }
 
-    @Roles(UserRole.ADMIN)
-    @UseGuards(JwtAuthGuard, RolesGuard)
-    @Patch(':id')
-    async update(@Param('id', ParseUUIDPipe) id: string, @Body() updateEventDto: UpdateEventDto) {
-      return await this.eventService.update(id, updateEventDto);
-    }
+  @Get(':id')
+  getEvent(@Param('id', ParseUUIDPipe) id: string) {
+    return this.eventService.findEventById(id);
+  }
 
-    @Roles(UserRole.ADMIN)
-    @UseGuards(JwtAuthGuard, RolesGuard)
-    @Delete(':id')
-    async remove(@Param('id', ParseUUIDPipe) id: string) {
-      return await this.eventService.remove(id);
-    }
+  @Roles(UserRole.ADMIN)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Patch(':id')
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateEventDto: UpdateEventDto,
+  ) {
+    return await this.eventService.update(id, updateEventDto);
+  }
 
-    @Get(':id/seats')
-    async getEventSeats(@Param('id', ParseUUIDPipe) id: string){
-        return await this.eventService.getSeatsByEventId(id)
-    }
+  @Roles(UserRole.ADMIN)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Delete(':id')
+  async remove(@Param('id', ParseUUIDPipe) id: string) {
+    return await this.eventService.remove(id);
+  }
 
-    @Post('admin/reindex')
-    @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles(UserRole.ADMIN)
-    async reindexAll() {
-        return this.eventService.reIndexAll()
-    }
+  @Get(':id/seats')
+  async getEventSeats(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<SeatWithLock[]> {
+    return await this.eventService.getSeatsByEventId(id);
+  }
 
-
-
+  @Post('admin/reindex')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async reindexAll() {
+    return this.eventService.reIndexAll();
+  }
 }
