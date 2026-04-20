@@ -1,7 +1,5 @@
 import {
-  BadRequestException,
   Injectable,
-  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { RegisterDTO } from './dto/auth.dto';
@@ -50,8 +48,8 @@ export class AuthService {
     const isMatch = await IsMatchHashedPassword(password, user.passwordHash);
     if (!isMatch) return null;
 
-    const { passwordHash, ...result } = user;
-    return result as User;
+  const { passwordHash: _, ...result } = user;
+  return result as User;
   }
 
   async refresh(userId: string, refreshToken: string) {
