@@ -26,10 +26,10 @@ export class BookingsService {
     private readonly eventService: EventService,
     private dataSource: DataSource,
     @InjectRepository(Booking)
-    private readonly bookingRepo: Repository<Booking>
+    private readonly bookingRepo: Repository<Booking>,
   ) {}
 
-async createBooking(dto: CreateBookingDto, userId: string) {
+  async createBooking(dto: CreateBookingDto, userId: string) {
     await this.validateSeatLocks(dto.eventId, dto.seatIds, userId);
 
     const event = await this.eventService.findEventById(dto.eventId);
@@ -39,20 +39,24 @@ async createBooking(dto: CreateBookingDto, userId: string) {
     const booking = await this.dataSource.transaction(async (manager) => {
       try {
         const seats = await manager.find(Seat, {
-          where: { 
+          where: {
             id: In(dto.seatIds),
-            event: { id: dto.eventId } 
+            event: { id: dto.eventId },
           },
-          lock: { mode: 'pessimistic_write' } 
+          lock: { mode: 'pessimistic_write' },
         });
 
         if (seats.length !== dto.seatIds.length) {
           throw new BadRequestException('One or more seats were not found');
         }
 
-        const isAllAvailable = seats.every(seat => seat.status === SeatStatus.AVAILABLE);
+        const isAllAvailable = seats.every(
+          (seat) => seat.status === SeatStatus.AVAILABLE,
+        );
         if (!isAllAvailable) {
-          throw new BadRequestException('One or more seats are no longer available');
+          throw new BadRequestException(
+            'One or more seats are no longer available',
+          );
         }
 
         const newBooking = manager.create(Booking, {
@@ -67,14 +71,23 @@ async createBooking(dto: CreateBookingDto, userId: string) {
         });
         const saved = await manager.save(newBooking);
 
-        await manager.update(Seat, { id: In(dto.seatIds) }, { status: SeatStatus.BOOKED });
-        
-        await manager.decrement(Event, { id: dto.eventId }, 'availableSeats', dto.seatIds.length);
+        await manager.update(
+          Seat,
+          { id: In(dto.seatIds) },
+          { status: SeatStatus.BOOKED },
+        );
+
+        await manager.decrement(
+          Event,
+          { id: dto.eventId },
+          'availableSeats',
+          dto.seatIds.length,
+        );
 
         await Promise.all(
           dto.seatIds.map((seatId) =>
-            this.redisService.seatUnlock(dto.eventId, seatId, userId)
-          )
+            this.redisService.seatUnlock(dto.eventId, seatId, userId),
+          ),
         );
 
         return saved;
@@ -97,32 +110,41 @@ async createBooking(dto: CreateBookingDto, userId: string) {
       },
       relations: ['event', 'user'],
       order: { createdAt: 'DESC' },
-    })
+    });
   }
 
-    async getBookingById(bookingId: string, userId: string): Promise<Booking> {
+  async getBookingById(bookingId: string, userId: string): Promise<Booking> {
     const booking = await this.bookingRepo.findOne({
       where: {
         id: bookingId,
         user: { id: userId },
       },
       relations: ['event', 'user'],
-    })
+    });
 
     if (!booking) {
-      throw new NotFoundException(`Booking ${bookingId} not found`)
+      throw new NotFoundException(`Booking ${bookingId} not found`);
     }
 
-    return booking
+    return booking;
   }
 
-  private async validateSeatLocks(eventId: string, seatIds: string[], userId: string) {
-    const lockValues = await this.redisService.getManySeatLocks(eventId, seatIds);
+  private async validateSeatLocks(
+    eventId: string,
+    seatIds: string[],
+    userId: string,
+  ) {
+    const lockValues = await this.redisService.getManySeatLocks(
+      eventId,
+      seatIds,
+    );
 
     seatIds.forEach((seatId, index) => {
       const lockedBy = lockValues[index];
-      if (!lockedBy) throw new BadRequestException(`Seat ${seatId} is not locked`);
-      if (lockedBy !== userId) throw new ForbiddenException(`You do not own lock for seat ${seatId}`);
+      if (!lockedBy)
+        throw new BadRequestException(`Seat ${seatId} is not locked`);
+      if (lockedBy !== userId)
+        throw new ForbiddenException(`You do not own lock for seat ${seatId}`);
     });
   }
 
@@ -132,16 +154,19 @@ async createBooking(dto: CreateBookingDto, userId: string) {
     userId: string,
     totalPrice: number,
   ) {
-    this.client.emit('booking.confirmed', {
-      bookingId: booking.id,
-      userId,
-      eventId: dto.eventId,
-      seatIds: dto.seatIds,
-      attendeeEmail: dto.attendeeEmail,
-      attendeeName: dto.attendeeName,
-      totalPrice,
-    }).subscribe({
-    error: (err) => this.logger.error('Failed to publish booking.confirmed event', err),
-  });
+    this.client
+      .emit('booking.confirmed', {
+        bookingId: booking.id,
+        userId,
+        eventId: dto.eventId,
+        seatIds: dto.seatIds,
+        attendeeEmail: dto.attendeeEmail,
+        attendeeName: dto.attendeeName,
+        totalPrice,
+      })
+      .subscribe({
+        error: (err) =>
+          this.logger.error('Failed to publish booking.confirmed event', err),
+      });
   }
 }

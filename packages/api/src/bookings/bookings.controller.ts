@@ -7,28 +7,26 @@ import { User } from 'src/users/entities/user.entity';
 
 @Controller('bookings')
 export class BookingsController {
-    constructor(
-        private readonly bookingsService: BookingsService
-    ){}
+  constructor(private readonly bookingsService: BookingsService) {}
 
-    @UseGuards(JwtAuthGuard)
-    @Post()
-    async createBooking(@Body() createBookingDto: CreateBookingDto, @CurrentUser() user: User){
-        return await this.bookingsService.createBooking(createBookingDto, user.id)
-    }
+  @UseGuards(JwtAuthGuard)
+  @Post()
+  async createBooking(
+    @Body() createBookingDto: CreateBookingDto,
+    @CurrentUser() user: User,
+  ) {
+    return await this.bookingsService.createBooking(createBookingDto, user.id);
+  }
 
-    @UseGuards(JwtAuthGuard)
-    @Get('my')
-    async getMyBookings(@CurrentUser() user: User) {
-        return this.bookingsService.getMyBookings(user.id)
-    }
+  @UseGuards(JwtAuthGuard)
+  @Get('my')
+  async getMyBookings(@CurrentUser() user: User) {
+    return this.bookingsService.getMyBookings(user.id);
+  }
 
-    @UseGuards(JwtAuthGuard)
-    @Get(':id')
-    async getBookingById(
-        @Param('id') id: string,
-        @CurrentUser() user: User
-    ) {
-        return this.bookingsService.getBookingById(id, user.id)
-    }
+  @UseGuards(JwtAuthGuard)
+  @Get(':id')
+  async getBookingById(@Param('id') id: string, @CurrentUser() user: User) {
+    return this.bookingsService.getBookingById(id, user.id);
+  }
 }

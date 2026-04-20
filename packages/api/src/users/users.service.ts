@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -15,12 +19,12 @@ export class UsersService {
 
   async create(dto: CreateUserDto): Promise<User> {
     await this.assertEmailNotTaken(dto.email);
-    const hashed = await hashingPassword(dto.password)
+    const hashed = await hashingPassword(dto.password);
     const user = this.userRepo.create({
       firstName: dto.firstName,
       lastName: dto.lastName,
       email: dto.email,
-      passwordHash: hashed ,
+      passwordHash: hashed,
       role: dto.role,
     });
 

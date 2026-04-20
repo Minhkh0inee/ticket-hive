@@ -11,6 +11,6 @@ import { ElasticModule } from 'src/elasticsearch/elasticsearch.module';
   imports: [TypeOrmModule.forFeature([Event]), RedisModule, ElasticModule],
   controllers: [EventController],
   providers: [EventService, RedisService],
-  exports: [EventService]
+  exports: [EventService],
 })
 export class EventModule {}

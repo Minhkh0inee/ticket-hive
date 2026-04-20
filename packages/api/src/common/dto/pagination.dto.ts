@@ -1,5 +1,15 @@
-import { Transform, Type } from 'class-transformer';
-import { IsArray, IsIn, IsInt, IsOptional, IsPositive, IsString, IsUUID, Max, Min } from 'class-validator';
+import { Transform, TransformFnParams, Type } from 'class-transformer';
+import {
+  IsArray,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsPositive,
+  IsString,
+  IsUUID,
+  Max,
+  Min,
+} from 'class-validator';
 
 export class PaginationDto {
   @Type(() => Number)
@@ -34,7 +44,9 @@ export class PaginationDto {
   @IsOptional()
   @IsArray()
   @IsUUID('all', { each: true })
-  @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
+  @Transform(({ value }: TransformFnParams) => {
+    return Array.isArray(value) ? (value as string[]) : [value as string];
+  })
   ignoreIds?: string[];
 
   @IsOptional()

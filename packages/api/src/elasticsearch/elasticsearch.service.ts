@@ -10,10 +10,12 @@ export class ElasticService implements OnModuleInit {
 
   constructor(@Inject(ELASTIC_CLIENT) private readonly client: Client) {}
 
-async onModuleInit() {
+  async onModuleInit() {
     try {
       const response = await this.client.cluster.health();
-      this.logger.log(`✅ Search Cluster connected — status: ${response.body.status}`);
+      this.logger.log(
+        `✅ Search Cluster connected — status: ${response.body.status}`,
+      );
       await this.createEventIndex();
     } catch (error) {
       this.logger.error('❌ Search Cluster connection failed', error);
@@ -61,34 +63,41 @@ async onModuleInit() {
   }
 
   async searchEvents(dto: SearchEventDto) {
-    const { q, city, category, minPrice, maxPrice, limit = 10, offset = 0 } = dto;
-  
+    const {
+      q,
+      city,
+      category,
+      minPrice,
+      maxPrice,
+      limit = 10,
+      offset = 0,
+    } = dto;
+
     const must: any[] = [];
     const filter: any[] = [];
-  
+
     if (q) {
       must.push({
         multi_match: {
           query: q,
-          fields: ['title^3', 'description', 'venue'], 
+          fields: ['title^3', 'description', 'venue'],
           type: 'cross_fields',
           operator: 'and',
         },
       });
     }
-  
+
     if (city) {
-      filter.push({ 
-        term: { 
-          city: city.trim().toLowerCase() 
-        } 
+      filter.push({
+        term: {
+          city: city.trim().toLowerCase(),
+        },
       });
     }
-  
+
     if (category) {
       filter.push({ term: { category } });
     }
-  
 
     if (minPrice !== undefined || maxPrice !== undefined) {
       filter.push({
@@ -100,12 +109,13 @@ async onModuleInit() {
         },
       });
     }
-  
-const { body: result } = await this.client.search({
+
+    const { body: result } = await this.client.search({
       index: EVENT_INDEX,
       from: offset,
       size: limit,
-      body: { // Use 'body' for the query object
+      body: {
+        // Use 'body' for the query object
         query: {
           bool: {
             must: must.length > 0 ? must : [{ match_all: {} }],
@@ -113,14 +123,15 @@ const { body: result } = await this.client.search({
           },
         },
         sort: [{ eventDate: { order: 'asc' } }],
-      }
+      },
     });
-  
+
     const hits = result.hits.hits;
-    const total = typeof result.hits.total === 'number'
-      ? result.hits.total
-      : result.hits.total?.value ?? 0;
-  
+    const total =
+      typeof result.hits.total === 'number'
+        ? result.hits.total
+        : (result.hits.total?.value ?? 0);
+
     return {
       data: hits.map((hit) => hit._source),
       total,
@@ -156,7 +167,7 @@ const { body: result } = await this.client.search({
 
     await this.client.indices.create({
       index: EVENT_INDEX,
-      body: { 
+      body: {
         mappings: {
           properties: {
             id: { type: 'keyword' },
@@ -178,7 +189,7 @@ const { body: result } = await this.client.search({
           number_of_shards: 1,
           number_of_replicas: 0,
         },
-      }
+      },
     });
 
     this.logger.log(`✅ Index "${EVENT_INDEX}" created`);
