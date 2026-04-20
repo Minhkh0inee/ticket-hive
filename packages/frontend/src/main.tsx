@@ -5,6 +5,7 @@ import App from './App.tsx'
 import { Provider } from 'react-redux'
 import { store } from './stores/index.ts'
 import { setTokens, fetchProfileRequest } from './stores/slices/auth.slice.ts'
+import { GlobalErrorBoundary } from '@/components/common/GlobalErrorBoundary.tsx'
 
 const accessToken = localStorage.getItem('accessToken')
 const refreshToken = localStorage.getItem('refreshToken')
@@ -14,8 +15,10 @@ if (accessToken && refreshToken) {
 }
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Provider store={store}>
-    <App />
-    </Provider>
+    <GlobalErrorBoundary>
+      <Provider store={store}>
+        <App />
+      </Provider>
+    </GlobalErrorBoundary>
   </StrictMode>,
 )

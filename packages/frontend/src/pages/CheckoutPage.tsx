@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { Lock, CalendarDays, MapPin, CreditCard, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -14,6 +17,14 @@ import { createBookingRequest, resetCreateBooking } from '@/stores/slices/bookin
 import { SECTION_CONFIG } from '@/components/event-detail/schedule/constants'
 import type { SeatSection } from '@/types/event.types'
 import { useAppDispatch } from '@/hooks/useAppDispatch'
+
+const checkoutSchema = z.object({
+  fullName: z.string().min(2, 'Họ và tên phải có ít nhất 2 ký tự'),
+  email: z.string().email('Email không hợp lệ'),
+  phone: z.string().regex(/^0[0-9]{9,10}$/, 'Số điện thoại không hợp lệ (VD: 0912345678)'),
+})
+
+type CheckoutFormData = z.infer<typeof checkoutSchema>
 
 interface CheckoutLocationState {
   lockExpiresAt?: string
@@ -106,33 +117,27 @@ export function CheckoutPage() {
     return () => { dispatch(resetCreateBooking()) }
   }, [dispatch])
 
-  const [form, setForm] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
-    cardNumber: '',
-    expiry: '',
-    cvv: '',
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid },
+  } = useForm<CheckoutFormData>({
+    resolver: zodResolver(checkoutSchema),
+    mode: 'onChange',
   })
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
-  }
-
-
-  function handlePay(e: React.FormEvent) {
-    e.preventDefault()
+  function onSubmit(data: CheckoutFormData) {
     if (isExpired || isCreating || !currentEvent) return
     dispatch(createBookingRequest({
       eventId: currentEvent.id,
       seatIds: selectedSeats,
-      attendeeName: form.fullName,
-      attendeeEmail: form.email,
-      attendeePhone: form.phone,
+      attendeeName: data.fullName,
+      attendeeEmail: data.email,
+      attendeePhone: data.phone,
     }))
   }
 
-  const canPay = !isExpired && form.fullName && form.email && form.phone
+  const canPay = !isExpired && isValid
   return (
     <div className="min-h-screen bg-[oklch(0.13_0_0)] text-white">
       <div className="max-w-5xl mx-auto px-4 py-10">
@@ -179,31 +184,33 @@ export function CheckoutPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handlePay} className="space-y-4">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <Label htmlFor="fullName" className="text-[oklch(0.7_0_0)] text-xs">Họ và tên</Label>
                       <Input
                         id="fullName"
-                        name="fullName"
                         placeholder="Nguyễn Văn A"
-                        value={form.fullName}
-                        onChange={handleChange}
+                        {...register('fullName')}
                         className="bg-[oklch(0.22_0_0)] border-[oklch(0.3_0_0)] text-white placeholder:text-[oklch(0.4_0_0)] focus-visible:ring-[oklch(0.6_0.2_250)] h-10"
                       />
+                      {errors.fullName && (
+                        <p className="text-[oklch(0.7_0.15_25)] text-xs">{errors.fullName.message}</p>
+                      )}
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="email" className="text-[oklch(0.7_0_0)] text-xs">Email</Label>
                       <Input
                         id="email"
-                        name="email"
                         type="email"
                         placeholder="email@example.com"
-                        value={form.email}
-                        onChange={handleChange}
+                        {...register('email')}
                         className="bg-[oklch(0.22_0_0)] border-[oklch(0.3_0_0)] text-white placeholder:text-[oklch(0.4_0_0)] focus-visible:ring-[oklch(0.6_0.2_250)] h-10"
                       />
+                      {errors.email && (
+                        <p className="text-[oklch(0.7_0.15_25)] text-xs">{errors.email.message}</p>
+                      )}
                     </div>
                   </div>
 
@@ -211,14 +218,15 @@ export function CheckoutPage() {
                     <Label htmlFor="phone" className="text-[oklch(0.7_0_0)] text-xs">Số điện thoại</Label>
                     <Input
                       id="phone"
-                      name="phone"
                       type="tel"
-                      placeholder="0912 345 678"
-                      value={form.phone}
-                      onChange={handleChange}
+                      placeholder="0912345678"
                       inputMode="tel"
+                      {...register('phone')}
                       className="bg-[oklch(0.22_0_0)] border-[oklch(0.3_0_0)] text-white placeholder:text-[oklch(0.4_0_0)] focus-visible:ring-[oklch(0.6_0.2_250)] h-10"
                     />
+                    {errors.phone && (
+                      <p className="text-[oklch(0.7_0.15_25)] text-xs">{errors.phone.message}</p>
+                    )}
                   </div>
 
                   {/* <div className="space-y-1.5">
