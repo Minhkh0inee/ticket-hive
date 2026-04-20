@@ -19,6 +19,7 @@ function formatDate(dateStr: string) {
 export function HeroBanner() {
   const [current, setCurrent] = useState(0)
   const featured = useAppSelector(state => state.home.featured) 
+
   const events = featured.data || []
   const pairs = Math.ceil(featured.data.length / 2)
   const next = useCallback(() => setCurrent((c) => (c + 1) % pairs), [pairs])

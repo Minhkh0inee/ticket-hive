@@ -6,9 +6,25 @@ import {
   setSectionLoading,
   fetchSectionSuccess,
   fetchSectionFailed,
+  setHomepageLoading,
+  setHomepageData,
+  setHomepageFailed,
 } from "../slices/home.slice";
 import type { HomeSection } from "../slices/home.slice";
 import type { Event } from "@/types/event.types";
+
+function* fetchHomepageBatch() {
+  yield put(setHomepageLoading())
+  try {
+    const response = (yield call(() =>
+      axiosInstance.get('/events/home-page')
+    )) as AxiosResponse
+    yield put(setHomepageData(response.data.data ?? []))
+  } catch (err) {
+    const error = err as { response?: { data?: { message?: string } } }
+    yield put(setHomepageFailed(error.response?.data?.message ?? 'Failed to load'))
+  }
+}
 
 function* fetchTagSection(section: HomeSection, tag: string, limit: number) {
   yield put(setSectionLoading({ section }));
@@ -54,17 +70,13 @@ function* fetchCategorySection(
 
 function* loadHomePageWorker() {
   yield all([
-    call(fetchTagSection, "featured", "featured", 6),
-    call(fetchTagSection, "special", "special", 12),
-    call(fetchTagSection, "trending", "trending", 4),
-    call(fetchTagSection, "newEvents", "new", 8),
-
-    call(fetchCategorySection, "music", "am-nhac", 8),
-    call(fetchCategorySection, "theatre", "kich", 8),
-    call(fetchCategorySection, "festival", "le-hoi", 8),
-    call(fetchCategorySection, "conference", "hoi-nghi", 8),
-    call(fetchCategorySection, "sports", "the-thao", 8),
-  ]);
+    call(fetchHomepageBatch),
+    call(fetchCategorySection, 'music',      'am-nhac',   8),
+    call(fetchCategorySection, 'theatre',    'kich',       8),
+    call(fetchCategorySection, 'festival',   'le-hoi',     8),
+    call(fetchCategorySection, 'conference', 'hoi-nghi',   8),
+    call(fetchCategorySection, 'sports',     'the-thao',   8),
+  ])
 }
 
 export function* homeWatcher() {

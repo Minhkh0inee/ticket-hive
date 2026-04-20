@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { store } from '../stores'
 import { refreshTokenFailed, refreshTokenSuccess } from '../stores/slices/auth.slice'
+import { toast } from 'sonner'
 
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:8080',
@@ -29,6 +30,21 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config
+    const status = error.response?.status;
+    if (status === 429) {
+      const retryAfter = error.response.headers['retry-after'];
+      
+      toast.error('Thao tác quá nhanh!', {
+        description: retryAfter 
+          ? `Vui lòng thử lại sau ${retryAfter} giây.` 
+          : 'Bạn đã gửi quá nhiều yêu cầu, vui lòng đợi một chút.',
+        duration: 5000,
+        id: 'rate-limit-toast', 
+      });
+
+      return Promise.reject(error);
+    }
+
     if (error.response?.status !== 401) {
       return Promise.reject(error)
     }
