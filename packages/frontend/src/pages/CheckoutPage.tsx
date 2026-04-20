@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { toast } from 'sonner'
 import { Lock, CalendarDays, MapPin, CreditCard, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -58,6 +59,8 @@ export function CheckoutPage() {
   const state = (location.state ?? {}) as CheckoutLocationState
   const dispatch = useAppDispatch()
   const confirmedRef = useRef(false)
+  const warnedRef = useRef(false)
+  const [showExpiredModal, setShowExpiredModal] = useState(false)
 
   const { isCreating, createSuccess, createError, currentBooking } = useAppSelector(s => s.booking)
 
@@ -70,6 +73,11 @@ export function CheckoutPage() {
 
   const currentEvent = useAppSelector(s => s.event.currentEvent)
   const { seats, selectedSeats } = useAppSelector(s => s.seat)
+
+  const selectedSeatsRef = useRef(selectedSeats)
+  const eventIdRef = useRef(currentEvent?.id)
+  useEffect(() => { selectedSeatsRef.current = selectedSeats }, [selectedSeats])
+  useEffect(() => { eventIdRef.current = currentEvent?.id }, [currentEvent])
 
   function handleBack() {
     if (!confirmedRef.current && currentEvent?.id && selectedSeats.length > 0) {
@@ -94,13 +102,38 @@ export function CheckoutPage() {
   const bookingFee = Math.round(subtotal * BOOKING_FEE_RATE)
   const total = subtotal + bookingFee
 
-  // Redirect back if timer expires
   useEffect(() => {
-    if (isExpired && secondsLeft === 0 && state.lockExpiresAt) {
-      const t = setTimeout(() => navigate(-1), 3000)
-      return () => clearTimeout(t)
+    if (isExpired && state.lockExpiresAt) {
+      setShowExpiredModal(true)
     }
-  }, [isExpired, secondsLeft, state.lockExpiresAt, navigate])
+  }, [isExpired, state.lockExpiresAt])
+
+  // Warn user at T-2 min remaining (once)
+  useEffect(() => {
+    if (secondsLeft <= 120 && secondsLeft > 0 && !warnedRef.current) {
+      warnedRef.current = true
+      toast.warning('Ghế sắp hết hạn giữ — còn 2 phút!')
+    }
+  }, [secondsLeft])
+
+  useEffect(() => {
+    function handleBeforeUnload() {
+      if (confirmedRef.current || !eventIdRef.current || selectedSeatsRef.current.length === 0) return
+      const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
+      const token = localStorage.getItem('accessToken')
+      fetch(`${apiUrl}/seats/unlock`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ eventId: eventIdRef.current, seatIds: selectedSeatsRef.current }),
+        keepalive: true,
+      })
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [])
 
   // Navigate to confirmation on successful booking
   useEffect(() => {
@@ -388,6 +421,20 @@ export function CheckoutPage() {
 
         </div>
       </div>
+
+      {showExpiredModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-[oklch(0.19_0_0)] border border-[oklch(0.26_0_0)] rounded-2xl p-6 max-w-sm w-full mx-4 space-y-4">
+            <h2 className="text-white font-semibold text-lg">Ghế đã hết thời gian giữ</h2>
+            <p className="text-[oklch(0.55_0_0)] text-sm">
+              Thời gian giữ ghế đã hết. Vui lòng quay lại và chọn ghế mới.
+            </p>
+            <Button onClick={handleBack} className="w-full h-10 bg-[oklch(0.6_0.2_250)] hover:bg-[oklch(0.54_0.2_250)]">
+              Chọn lại ghế
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

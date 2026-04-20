@@ -4,30 +4,53 @@ on:
     branches: [main]
 
 jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint API
+        run: npm run lint --workspace=packages/api
+      - name: Lint Worker
+        run: npm run lint --workspace=packages/worker
+      - name: Lint Frontend
+        run: npm run lint --workspace=packages/frontend
+      - name: Test API
+        run: npm run test --workspace=packages/api -- --passWithNoTests --forceExit
+      - name: Test Worker
+        run: npm run test --workspace=packages/worker -- --passWithNoTests --forceExit
+
   deploy-backend:
+    needs: lint-test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Install Railway CLI
         run: npm i -g @railway/cli
-      
+
       - name: Deploy API
         run: railway up --service api --detach
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          
+
       - name: Deploy Worker
         run: railway up --service worker --detach
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
   deploy-frontend:
+    needs: lint-test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
-      
+
       - name: Pull Vercel Environment Information
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
         env:
