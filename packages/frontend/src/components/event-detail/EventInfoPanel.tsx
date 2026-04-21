@@ -12,6 +12,7 @@ interface EventInfoPanelProps {
   venueAddress?: string
   basePrice: string
   isSoldOut?: boolean
+  onBuyClick?: () => void
 }
 
 export const EventInfoPanel = memo(function EventInfoPanel({
@@ -22,6 +23,7 @@ export const EventInfoPanel = memo(function EventInfoPanel({
   venueAddress,
   basePrice,
   isSoldOut,
+  onBuyClick,
 }: EventInfoPanelProps) {
   const dateText = useMemo(() => fmtDateRange(eventDate, endDate), [eventDate, endDate])
   const priceNum = useMemo(() => parseInt(basePrice, 10), [basePrice])
@@ -74,6 +76,7 @@ export const EventInfoPanel = memo(function EventInfoPanel({
       {/* CTA */}
       <Button
         disabled={isSoldOut}
+        onClick={!isSoldOut ? onBuyClick : undefined}
         className={`w-full h-11 rounded-xl text-sm font-semibold ${
           isSoldOut
             ? 'bg-[oklch(0.28_0_0)] text-[oklch(0.5_0_0)] cursor-not-allowed hover:bg-[oklch(0.28_0_0)]'

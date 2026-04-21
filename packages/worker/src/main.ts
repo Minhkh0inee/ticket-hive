@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import * as amqplib from 'amqplib'; // Use this style for compatibility
+import { Logger } from 'nestjs-pino';
 
 async function assertQueues() {
   const url = process.env.RABBITMQ_URL;
@@ -23,6 +24,7 @@ async function bootstrap() {
     const app = await NestFactory.createMicroservice<MicroserviceOptions>(
       AppModule,
       {
+        bufferLogs: true,
         transport: Transport.RMQ,
         options: {
           urls: [process.env.RABBITMQ_URL as string],
@@ -34,6 +36,8 @@ async function bootstrap() {
         },
       },
     );
+    app.useLogger(app.get(Logger));
+    app.flushLogs();
     await app.listen();
     console.log('🚀 Worker is listening on main_queue...');
   } catch (error) {

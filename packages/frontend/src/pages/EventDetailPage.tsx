@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useEffect } from 'react'
+import { useMemo, useCallback, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -45,7 +45,11 @@ export function EventDetailPage() {
     }
   }, [dispatch, events.length])
 
+  const scheduleRef = useRef<HTMLDivElement>(null)
   const handleBack = useCallback(() => navigate(-1), [navigate])
+  const handleBuyClick = useCallback(() => {
+    scheduleRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [])
 
   const { relatedEvents, moreEvents, viewerCount } = useMemo(() => {
     if (!currentEvent) return { relatedEvents: [], moreEvents: [], viewerCount: 0 }
@@ -91,6 +95,7 @@ export function EventDetailPage() {
               venue={currentEvent!.venue}
               basePrice={String(currentEvent!.basePrice)}
               isSoldOut={isSoldOut}
+              onBuyClick={handleBuyClick}
             />
             <HeroGallery
               images={currentEvent!.bannerUrl ?? `https://picsum.photos/seed/${currentEvent!.id.slice(0, 8)}/800/450`}
@@ -101,11 +106,13 @@ export function EventDetailPage() {
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 mb-10">
             <div className="space-y-4">
               <EventDescription text={currentEvent!.description} />
-              <EventSchedule
-                eventId={id!}
-                eventDate={currentEvent!.eventDate}
-                basePrice={currentEvent!.basePrice}
-              />
+              <div >
+                <EventSchedule
+                  eventId={id!}
+                  eventDate={currentEvent!.eventDate}
+                  basePrice={currentEvent!.basePrice}
+                />
+              </div>
               <EventOrganizer organizer={currentEvent!.organizer} /> 
             </div>
             <aside className="lg:sticky lg:top-24 self-start">

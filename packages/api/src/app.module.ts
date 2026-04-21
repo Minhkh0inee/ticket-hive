@@ -15,6 +15,8 @@ import { ElasticModule } from './elasticsearch/elasticsearch.module';
 import { CategoriesModule } from './categories/categories.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { LoggerModule } from 'nestjs-pino';
+import { randomUUID } from 'crypto';
 
 @Module({
   imports: [
@@ -22,6 +24,22 @@ import { APP_GUARD } from '@nestjs/core';
       isGlobal: true,
       envFilePath:
         process.env.NODE_ENV === 'production' ? '.env.production' : '.env',
+    }),
+    LoggerModule.forRoot({
+      pinoHttp: {
+        level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+        transport:
+          process.env.NODE_ENV !== 'production'
+            ? { target: 'pino-pretty', options: { singleLine: true } }
+            : undefined,
+        redact: ['req.headers.authorization', 'req.body.password'],
+        genReqId: (req, res) => {
+          const id =
+            (req.headers['x-request-id'] as string) || randomUUID();
+          res.setHeader('X-Request-Id', id);
+          return id;
+        },
+      },
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',

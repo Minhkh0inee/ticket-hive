@@ -1,13 +1,16 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
+import { Logger } from 'nestjs-pino';
 import { HttpExceptionFilter } from './common/filters/http-exeception.filter';
 import { ResponseInterceptor } from './common/interceptor/response.interceptor';
 import helmet from 'helmet';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  app.useLogger(app.get(Logger));
+  app.flushLogs();
   const port = process.env.PORT ?? 8080;
   const env = process.env.NODE_ENV || 'development';
   app.use(helmet());

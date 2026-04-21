@@ -14,5 +14,5 @@ export default new DataSource({
   migrations: ['src/database/migrations/*{.ts,.js}'],
   synchronize: false,
   logging: process.env.NODE_ENV === 'development',
-  extra: { max: 10, min: 2, idleTimeoutMillis: 30000 },
+  extra: { max: 10, min: 2, idleTimeoutMillis: 30000, connectionTimeoutMillis: 10000, },
 });
