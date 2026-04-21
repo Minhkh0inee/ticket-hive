@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 import { CreatePaymentDto } from './dto/create-payment.dto';
@@ -16,9 +16,33 @@ export class PaymentsController {
         return await this.paymentsService.createPaymentLink(paymentsDto);
     }
 
+    @Get(':orderCode')
+    async getPaymentInfo(
+        @Param('orderCode', ParseIntPipe) orderCode: number,
+    ) {
+        return this.paymentsService.getPaymentInfo(orderCode);
+    }
+
+    @Delete(':orderCode')
+    async cancelPayment(
+        @Param('orderCode', ParseIntPipe) orderCode: number,
+        @Query('reason') reason?: string,
+    ) {
+        return this.paymentsService.cancelPayment(orderCode, reason);
+    }
+
     @UseGuards(PaymentWebhookGuard)
     @Post('webhook')
     async handleWebhook(@Req() req: any) {
-        return req.webhookData;
+    this.paymentsService.handlePaymentWebhook(req.webhookData).catch((err) =>
+        console.error('Webhook handler error:', err),
+    );
+
+  return { success: true };
+}
+
+    @Post('confirm-webhook')
+    async confirmWebhook(@Body('webhookUrl') webhookUrl: string) {
+        return this.paymentsService.confirmWebhook(webhookUrl);
     }
 }

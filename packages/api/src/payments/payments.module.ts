@@ -16,8 +16,6 @@ import { PayOS } from '@payos/node';
         const apiKey = process.env.PAYOS_API_KEY;
         const checksumKey = process.env.PAYOS_CHECKSUM_KEY;
 
-        console.log({ clientId, apiKey, checksumKey }); // 👈 log hết ra
-
         if (!clientId || !apiKey || !checksumKey) {
           throw new Error(
             `Missing PayOS env: clientId=${clientId}, apiKey=${apiKey}, checksumKey=${checksumKey}`,
