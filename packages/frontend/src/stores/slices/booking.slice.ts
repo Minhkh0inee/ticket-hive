@@ -14,6 +14,7 @@ interface BookingState {
   isCreating: boolean
   createError: string | null
   createSuccess: boolean
+  paymentUrl: string | null
 }
 
 const initialState: BookingState = {
@@ -28,6 +29,7 @@ const initialState: BookingState = {
   isCreating: false,
   createError: null,
   createSuccess: false,
+  paymentUrl: null,
 }
 
 const bookingSlice = createSlice({
@@ -38,12 +40,17 @@ const bookingSlice = createSlice({
       state.isCreating = true
       state.createError = null
       state.createSuccess = false
+      state.paymentUrl = null
       void _action
     },
-    createBookingSuccess(state, action: PayloadAction<Booking>) {
+    createBookingSuccess(
+      state,
+      action: PayloadAction<{ booking: Booking; paymentUrl: string }>,
+    ) {
       state.isCreating = false
       state.createSuccess = true
-      state.currentBooking = action.payload
+      state.currentBooking = action.payload.booking
+      state.paymentUrl = action.payload.paymentUrl
     },
     createBookingFailed(state, action: PayloadAction<string>) {
       state.isCreating = false
@@ -65,6 +72,7 @@ const bookingSlice = createSlice({
       state.isCreating = false
       state.createError = null
       state.createSuccess = false
+      state.paymentUrl = null
     },
     fetchBookingDetailRequest(state, _action: PayloadAction<string>) {
       state.currentBookingLoading = true
@@ -79,7 +87,6 @@ const bookingSlice = createSlice({
       state.currentBookingLoading = false
       state.currentBookingError = action.payload
     },
-    
   },
 })
 
@@ -93,6 +100,6 @@ export const {
   resetCreateBooking,
   fetchBookingDetailFailed,
   fetchBookingDetailRequest,
-  fetchBookingDetailSuccess
+  fetchBookingDetailSuccess,
 } = bookingSlice.actions
 export default bookingSlice.reducer

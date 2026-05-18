@@ -58,9 +58,18 @@ REDIS_URL=redis://localhost:6379
 RABBITMQ_URL=amqp://guest:guest@localhost:5672
 ELASTICSEARCH_URL=http://localhost:9200
 
+# Seat locking TTL (seconds)
+SEAT_LOCK_TTL_SECONDS=300
+
+# PayOS payment gateway (get from PayOS dashboard)
+PAYOS_CLIENT_ID=...
+PAYOS_API_KEY=...
+PAYOS_CHECKSUM_KEY=...
+
 # Frontend
-VITE_API_URL=http://localhost:8080
+VITE_API_BASE_URL=http://localhost:8080
 VITE_ENABLE_MSW=true   # Enable Mock Service Worker
+FRONTEND_URL=http://localhost:5173  # used for CORS / redirect URLs
 ```
 
 ## Architecture
@@ -95,11 +104,13 @@ NestJS modules, one per domain:
 | `event` | CRUD, Redis caching (5 min list / 1 hr detail), Elasticsearch indexing |
 | `seats` | Fetch seats, Redis locking (5-min TTL, max 4 per user) |
 | `bookings` | Create booking, publish to RabbitMQ, fetch user bookings |
+| `payments` | PayOS payment link creation, webhook verification, cancel |
 | `categories` | List event categories |
 | `users` | User profile |
 | `elasticsearch` | Shared search integration module |
 | `redis` | Shared cache/locking module (`@nestjs-modules/ioredis`) |
 | `database` | TypeORM data source, migrations, seeds |
+| `common` | Shared guards (`PaymentWebhookGuard`, `RoleGuard`), decorators, interceptors, filters |
 
 **API endpoints:**
 - `POST /auth/login`, `POST /auth/register`, `GET /auth/profile`, `POST /auth/refresh`, `POST /auth/logout`
@@ -107,6 +118,8 @@ NestJS modules, one per domain:
 - `GET /seats/event/:eventId`, `POST /seats/lock`, `POST /seats/unlock`
 - `POST /bookings`, `GET /bookings/my`, `GET /bookings/:id`
 - `GET /categories`
+- `POST /payments` (JWT), `GET /payments/:orderCode`, `DELETE /payments/:orderCode`
+- `POST /payments/webhook` (PaymentWebhookGuard — verifies PayOS signature), `POST /payments/confirm-webhook`
 
 ### Worker Package (`packages/worker/src/`)
 
@@ -127,8 +140,15 @@ Key points:
 - Controllers validate with DTOs (`class-validator`); services contain business logic
 - Auth guards: `JwtAuthGuard` (access token), `RefreshTokenGuard` (refresh), `LocalAuthGuard` (login)
 - Redis caching via `@nestjs-modules/ioredis` — keys follow `event:list:*` / `event:item:{id}` pattern
-- Seat locking uses Redis `SET NX EX` for atomic acquire
+- Seat locking uses Redis `SET NX EX` for atomic acquire; TTL controlled by `SEAT_LOCK_TTL_SECONDS`
 - Booking creation publishes a message to RabbitMQ; the HTTP response does not wait for email delivery
+- Rate limiting: `ThrottlerModule` globally applied (1000 req / 60s window via `APP_GUARD`)
+- Structured logging: `nestjs-pino` with `pino-pretty` in dev, JSON in production; `Authorization` header and `password` body field are redacted; `X-Request-Id` propagated per request
+
+### PayOS Payment Integration
+- `PaymentsModule` registers `PayOS` client as `'PAYOS_CLIENT'` provider (requires `PAYOS_CLIENT_ID`, `PAYOS_API_KEY`, `PAYOS_CHECKSUM_KEY`)
+- Webhook endpoint is protected by `PaymentWebhookGuard` which calls `paymentsService.verifyWebhookData()` and attaches `req.webhookData` for the controller
+- `handlePaymentWebhook` currently logs success/cancel by PayOS `code` (`'00'` = success, `'CANCELLED'` = cancelled) — DB update and email steps are TODO stubs
 
 ### Database
 - TypeORM with PostgreSQL on Neon (cloud-hosted)
