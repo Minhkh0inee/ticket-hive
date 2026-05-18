@@ -1,4 +1,4 @@
-import {
+ import {
   BadRequestException,
   ForbiddenException,
   Inject,
@@ -15,6 +15,8 @@ import { EventService } from 'src/event/event.service';
 import { Seat, SeatStatus } from 'src/seats/entities/seats.entity';
 import { Event } from 'src/event/entities/event.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { PaymentsService } from 'src/payments/payments.service';
+import { Payment, PaymentStatus } from 'src/payments/payment.entity';
 
 @Injectable()
 export class BookingsService {
@@ -27,6 +29,7 @@ export class BookingsService {
     private dataSource: DataSource,
     @InjectRepository(Booking)
     private readonly bookingRepo: Repository<Booking>,
+    private readonly paymentsService: PaymentsService,
   ) {}
 
   async createBooking(dto: CreateBookingDto, userId: string) {
@@ -97,9 +100,59 @@ export class BookingsService {
       }
     });
 
-    this.publishBookingConfirmed(booking, dto, userId, totalPrice);
+    // Create PayOS payment link and persist Payment record
+    try {
+      // 10-digit orderCode within PayOS limit (1–9999999999999)
+      const orderCode = Number(Date.now().toString().slice(3, 13));
+      const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:5173';
 
-    return booking;
+      const paymentResult = await this.paymentsService.createPaymentLink({
+        orderCode,
+        amount: Math.round(totalPrice),
+        description: `TH-${booking.id.slice(0, 8).toUpperCase()}`,
+        buyerName: dto.attendeeName,
+        buyerEmail: dto.attendeeEmail,
+        buyerPhone: dto.attendeePhone,
+        items: [],
+        returnUrl: `${frontendUrl}/payment/success?bookingId=${booking.id}`,
+        cancelUrl: `${frontendUrl}/payment/cancel?bookingId=${booking.id}`,
+      });
+
+      const payment = this.dataSource.manager.create(Payment, {
+        orderCode,
+        amount: totalPrice,
+        status: PaymentStatus.PENDING,
+        paymentLinkId: paymentResult.data?.paymentLinkId ?? null,
+        checkoutUrl: paymentResult.data?.checkoutUrl ?? null,
+        booking: { id: booking.id },
+      });
+      await this.dataSource.manager.save(Payment, payment);
+
+      this.logger.log(`Payment link created for booking ${booking.id}`);
+      return { booking, paymentUrl: paymentResult.data?.checkoutUrl };
+    } catch (error) {
+      // Compensate: mark booking cancelled, restore seats and event count
+      this.logger.error(
+        `Payment link creation failed for booking ${booking.id}: ${error.message}`,
+      );
+      await this.bookingRepo.update(booking.id, {
+        status: BookingStatus.CANCELLED,
+      });
+      await this.dataSource.manager.update(
+        Seat,
+        { id: In(dto.seatIds) },
+        { status: SeatStatus.AVAILABLE },
+      );
+      await this.dataSource.manager.increment(
+        Event,
+        { id: dto.eventId },
+        'availableSeats',
+        dto.seatIds.length,
+      );
+      throw new BadRequestException(
+        `Failed to create payment link: ${error.message}`,
+      );
+    }
   }
 
   async getMyBookings(userId: string): Promise<Booking[]> {

@@ -1,7 +1,8 @@
-import { Entity, Column, ManyToOne } from 'typeorm';
+import { Entity, Column, ManyToOne, OneToOne } from 'typeorm';
 import { AbstractEntity } from '../../common/entities/abstract.entity';
 import { User } from '../../users/entities/user.entity';
 import { Event } from '../../event/entities/event.entity';
+import { Payment } from '../../payments/payment.entity';
 
 export enum BookingStatus {
   PENDING = 'pending',
@@ -34,4 +35,7 @@ export class Booking extends AbstractEntity {
 
   @ManyToOne(() => Event, (event) => event.bookings)
   event: Event;
+
+  @OneToOne(() => Payment, (payment) => payment.booking, { nullable: true })
+  payment?: Payment;
 }

@@ -19,7 +19,11 @@ function* createBookingWorker(action: ReturnType<typeof createBookingRequest>) {
       () => axiosInstance.post('/bookings', action.payload)
     )) as AxiosResponse
 
-    yield put(createBookingSuccess(response.data.data))
+    // response.data.data is { booking, paymentUrl }
+    yield put(createBookingSuccess({
+      booking: response.data.data.booking,
+      paymentUrl: response.data.data.paymentUrl,
+    }))
   } catch (err) {
     const error = err as { response?: { data?: { message?: string } } }
     yield put(createBookingFailed(error.response?.data?.message ?? 'Failed to create booking'))

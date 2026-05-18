@@ -61,7 +61,7 @@ export function CheckoutPage() {
   const confirmedRef = useRef(false)
   const warnedRef = useRef(false)
   
-  const { isCreating, createSuccess, createError, currentBooking } = useAppSelector(s => s.booking)
+  const { isCreating, createSuccess, createError, currentBooking, paymentUrl } = useAppSelector(s => s.booking)
 
   const [fallbackExpiry] = useState(() =>
     new Date(Date.now() + 10 * 60 * 1000).toISOString()
@@ -112,7 +112,7 @@ export function CheckoutPage() {
   useEffect(() => {
     function handleBeforeUnload() {
       if (confirmedRef.current || !eventIdRef.current || selectedSeatsRef.current.length === 0) return
-      const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
+      const apiUrl = import.meta.env.VITE_API_BASE_URL ?? import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
       const token = localStorage.getItem('accessToken')
       fetch(`${apiUrl}/seats/unlock`, {
         method: 'POST',
@@ -128,15 +128,15 @@ export function CheckoutPage() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [])
 
-  // Navigate to confirmation on successful booking
+  // Redirect to PayOS checkout on successful booking creation
   useEffect(() => {
-    if (createSuccess && currentBooking) {
+    if (createSuccess && currentBooking && paymentUrl) {
       confirmedRef.current = true
       dispatch(clearSelection())
       dispatch(resetCreateBooking())
-      navigate(`/confirmation/${currentBooking.id}`, { replace: true })
+      window.location.href = paymentUrl
     }
-  }, [createSuccess, currentBooking, dispatch, navigate])
+  }, [createSuccess, currentBooking, paymentUrl, dispatch])
 
   // Reset slice on unmount so stale state doesn't linger
   useEffect(() => {

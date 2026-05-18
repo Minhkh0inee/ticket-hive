@@ -3,8 +3,34 @@ import { PaymentsController } from './payments.controller';
 import { PaymentsService } from './payments.service';
 import { PaymentWebhookGuard } from 'src/common/guards/payment.guard';
 import { PayOS } from '@payos/node';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Payment } from './payment.entity';
+import { Booking } from '../bookings/entities/bookings.entity';
+import { Seat } from '../seats/entities/seats.entity';
+import { Event } from '../event/entities/event.entity';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
+  imports: [
+    TypeOrmModule.forFeature([Payment, Booking, Seat, Event]),
+    ClientsModule.register([
+      {
+        name: 'RABBITMQ_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: [process.env.RABBITMQ_URL as string],
+          queue: 'main_queue',
+          queueOptions: {
+            durable: false,
+          },
+          socketOptions: {
+            heartbeatIntervalInSeconds: 60,
+            reconnectTimeInSeconds: 5,
+          },
+        },
+      },
+    ]),
+  ],
   controllers: [PaymentsController],
   providers: [
     PaymentsService,
@@ -26,6 +52,6 @@ import { PayOS } from '@payos/node';
       },
     },
   ],
-  exports: ['PAYOS_CLIENT'],
+  exports: ['PAYOS_CLIENT', PaymentsService, ClientsModule],
 })
 export class PaymentsModule {}

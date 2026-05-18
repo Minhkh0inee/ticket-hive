@@ -10,6 +10,8 @@ import { LoginPage } from '@/pages/LoginPage'
 import { RegisterPage } from '@/pages/RegisterPage'
 import { CheckoutPage } from '@/pages/CheckoutPage'
 import { ConfirmationPage } from '@/pages/ConfirmationPage'
+import { PaymentSuccessPage } from '@/pages/PaymentSuccessPage'
+import { PaymentCancelPage } from '@/pages/PaymentCancelPage'
 import { ProfilePage } from '@/pages/ProfilePage'
 import { MyTicketsPage } from '@/pages/MyTicketsPage'
 
@@ -25,6 +27,8 @@ function App() {
 
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/confirmation/:bookingId" element={<ConfirmationPage />} />
+        <Route path="/payment/success" element={<PaymentSuccessPage />} />
+        <Route path="/payment/cancel" element={<PaymentCancelPage />} />
 
         <Route element={<MainLayout />}>
           <Route path="/" element={<HomePage />} />

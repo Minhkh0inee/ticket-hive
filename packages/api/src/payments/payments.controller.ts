@@ -34,12 +34,12 @@ export class PaymentsController {
     @UseGuards(PaymentWebhookGuard)
     @Post('webhook')
     async handleWebhook(@Req() req: any) {
-    this.paymentsService.handlePaymentWebhook(req.webhookData).catch((err) =>
-        console.error('Webhook handler error:', err),
-    );
+        this.paymentsService.handlePaymentWebhook(req.webhookData).catch((err) =>
+            console.error('Webhook handler error:', err),
+        );
 
-  return { success: true };
-}
+        return { success: true };
+    }
 
     @Post('confirm-webhook')
     async confirmWebhook(@Body('webhookUrl') webhookUrl: string) {
