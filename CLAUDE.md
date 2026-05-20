@@ -67,7 +67,7 @@ PAYOS_API_KEY=...
 PAYOS_CHECKSUM_KEY=...
 
 # Frontend
-VITE_API_BASE_URL=http://localhost:8080
+VITE_API_URL=http://localhost:8080
 VITE_ENABLE_MSW=true   # Enable Mock Service Worker
 FRONTEND_URL=http://localhost:5173  # used for CORS / redirect URLs
 ```

@@ -8,6 +8,7 @@ import { useAppSelector } from '@/hooks/useAppSelector'
 import { searchEventsRequest, clearSearch } from '@/stores/slices/event.slice'
 import { fmtDate, fmtPrice } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { optimizeImage } from '@/utils/image'
 
 export function SearchBar() {
   const [query, setQuery] = useState('')
@@ -132,7 +133,7 @@ export function SearchBar() {
                     {/* Thumbnail */}
                     {event.bannerUrl ? (
                       <img
-                        src={event.bannerUrl}
+                        src={optimizeImage(event.bannerUrl)}
                         alt={event.title}
                         className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
                       />

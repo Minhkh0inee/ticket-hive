@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import type { Event } from '@/types/event.types'
 import { useAppSelector } from '@/hooks/useAppSelector'
 import { HeroBannerSkeleton } from '../HeroBannerSkeleton'
+import { optimizeImage } from '@/utils/image'
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-GB', {
@@ -37,7 +38,7 @@ export function HeroBanner() {
     return <></>
   }
 
-    if(featured.loading) {
+  if(featured.loading) {
     return <HeroBannerSkeleton/>
   }
 
@@ -93,14 +94,15 @@ function HeroCard({ event }: { event: Event }) {
     >
       {event.bannerUrl ? (
         <img
-          src={event.bannerUrl}
+          src={optimizeImage(event.bannerUrl)}
           alt={event.title}
+          fetchPriority='high'
+          decoding='async'
           className="w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]"
         />
       ) : (
         <div className="w-full h-full bg-gray-200" />
       )}
-      {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
       {/* Content */}

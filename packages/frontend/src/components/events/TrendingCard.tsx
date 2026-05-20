@@ -2,6 +2,7 @@ import { memo, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { Calendar } from 'lucide-react'
 import type { Event } from '@/types/event.types'
+import { optimizeImage } from '@/utils/image'
 
 export const TrendingCard = memo(function TrendingCard({ event, rank }: { event: Event; rank: number }) {
   const formattedDate = useMemo(
@@ -32,7 +33,7 @@ export const TrendingCard = memo(function TrendingCard({ event, rank }: { event:
         <div className="relative overflow-hidden bg-[oklch(0.16_0_0)]" style={{ aspectRatio: '3/2' }}>
           {event.bannerUrl ? (
             <img
-              src={event.bannerUrl}
+              src={optimizeImage(event.bannerUrl)}
               alt=""
               aria-hidden="true"
               className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-300"

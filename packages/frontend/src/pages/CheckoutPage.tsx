@@ -112,7 +112,7 @@ export function CheckoutPage() {
   useEffect(() => {
     function handleBeforeUnload() {
       if (confirmedRef.current || !eventIdRef.current || selectedSeatsRef.current.length === 0) return
-      const apiUrl = import.meta.env.VITE_API_BASE_URL ?? import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
+      const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
       const token = localStorage.getItem('accessToken')
       fetch(`${apiUrl}/seats/unlock`, {
         method: 'POST',
