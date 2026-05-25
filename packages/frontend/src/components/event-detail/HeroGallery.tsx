@@ -12,6 +12,7 @@ export const HeroGallery = memo(function HeroGallery({ images, title }: HeroGall
     <div className="relative rounded-2xl overflow-hidden h-[320px] sm:h-[380px]">
       <img
         src={optimizeImage(img)}
+        fetchPriority='high' 
         alt={title}
         className="w-full h-full object-cover"
         loading="eager"
