@@ -30,6 +30,9 @@ async function bootstrap() {
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     exposedHeaders: ['Retry-After'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+    maxAge: 86400,
   });
 
   const swaggerConfig = new DocumentBuilder()

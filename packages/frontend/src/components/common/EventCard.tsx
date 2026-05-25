@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import type { Event } from '@/types/event.types'
+import { optimizeImage } from '@/utils/image'
 
 interface EventCardProps {
   event: Event
@@ -29,7 +30,7 @@ export function EventCard({ event, className = '' }: EventCardProps) {
       <div className="relative aspect-[3/4] overflow-hidden rounded-xl">
         {event.bannerUrl ? (
           <img
-            src={event.bannerUrl}
+            src={optimizeImage(event.bannerUrl)}
             alt={event.title}
             className="w-full h-full object-cover transition-transform duration-150 ease-out group-hover:scale-[1.04]"
           />

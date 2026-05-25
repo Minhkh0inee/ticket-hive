@@ -7,6 +7,7 @@ import { UsersService } from 'src/users/users.service';
 import { IPayload } from './dto/auth.interface';
 import { ConfigService } from '@nestjs/config';
 import { RedisService } from 'src/redis/redis.service';
+import { RedisTTL } from 'src/common/constant/redis-key.constant';
 
 @Injectable()
 export class AuthService {
@@ -37,7 +38,7 @@ export class AuthService {
     await this.redisService.setRefreshToken(
       user.id,
       refreshToken,
-      60 * 60 * 24 * 7,
+      RedisTTL.auth.refreshToken,
     );
     return { accessToken, refreshToken };
   }

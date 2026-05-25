@@ -1,3 +1,4 @@
+import { optimizeImage } from '@/utils/image'
 import { memo } from 'react'
 
 interface HeroGalleryProps {
@@ -10,7 +11,8 @@ export const HeroGallery = memo(function HeroGallery({ images, title }: HeroGall
   return (
     <div className="relative rounded-2xl overflow-hidden h-[320px] sm:h-[380px]">
       <img
-        src={img}
+        src={optimizeImage(img)}
+        fetchPriority='high' 
         alt={title}
         className="w-full h-full object-cover"
         loading="eager"

@@ -10,8 +10,9 @@ import { SeatChips } from './SeatChip'
 import { SECTION_CONFIG } from './constants'
 import { useAppDispatch } from '@/hooks/useAppDispatch'
 import { useAppSelector } from '@/hooks/useAppSelector'
-import { lockSeatRequest } from '@/stores/slices/seat.slice'
+import { lockSeatRequest, clearSelection } from '@/stores/slices/seat.slice'
 import { AuthRequiredDialog } from '@/components/common/AuthRequiredDialog'
+import { SeatCancelDialog } from './SeatCancelDialog'
 
 const MAX_SEATS = 4
 
@@ -39,6 +40,25 @@ export function SeatMapDialog({
   const { user } = useAppSelector(s => s.auth)
   const lockPendingRef = useRef(false)
   const [showAuthDialog, setShowAuthDialog] = useState(false)
+  const [showCancelDialog, setShowCancelDialog] = useState(false)
+
+  function handleRequestClose() {
+    if (selectedSeats.length > 0) {
+      setShowCancelDialog(true)
+    } else {
+      onClose()
+    }
+  }
+
+  function handleCancelConfirm() {
+    dispatch(clearSelection())
+    setShowCancelDialog(false)
+    onClose()
+  }
+
+  function handleCancelDismiss() {
+    setShowCancelDialog(false)
+  }
 
   function handleLockingSeat() {
     if (!user) {
@@ -62,7 +82,7 @@ export function SeatMapDialog({
   
   return (
     <>
-    <Dialog open onOpenChange={open => { if (!open) onClose() }}>
+    <Dialog open onOpenChange={open => { if (!open) handleRequestClose() }}>
       <DialogContent className="bg-[oklch(0.19_0_0)] border border-[oklch(0.26_0_0)] text-white max-w-lg rounded-2xl p-0 gap-0 overflow-hidden">
 
         <DialogHeader className="px-5 pt-5 pb-4 pr-12 border-b border-[oklch(0.26_0_0)]">
@@ -154,6 +174,12 @@ export function SeatMapDialog({
     </Dialog>
 
     <AuthRequiredDialog open={showAuthDialog} onClose={() => setShowAuthDialog(false)} />
+    <SeatCancelDialog
+      open={showCancelDialog}
+      seatCount={selectedSeats.length}
+      onConfirm={handleCancelConfirm}
+      onCancel={handleCancelDismiss}
+    />
   </>
   )
 }

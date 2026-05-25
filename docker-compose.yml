@@ -117,9 +117,8 @@ services:
       - '5173:5173'
     volumes:
       - ./packages/frontend/src:/app/src
-    environment:
-      - VITE_API_BASE_URL=http://localhost:8080
-      - VITE_ENABLE_MSW=true
+    env_file:
+      - .env
     networks:
       - tickethive-network
 

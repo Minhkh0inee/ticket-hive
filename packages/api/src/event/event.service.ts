@@ -12,23 +12,7 @@ import { SearchEventDto } from 'src/elasticsearch/dto/search-event.dto';
 import { Category } from 'src/categories/entities/category.entity';
 import { HomepageData, SeatWithLock } from './entities/homepage';
 import { SelectQueryBuilder } from 'typeorm/browser';
-
-const CacheKeys = {
-  eventList: (offset: number, limit: number, filters: string) =>
-    `events:list:${offset}:${limit}:${filters}`,
-  eventItem: (id: string) => `events:item:${id}`,
-  eventTag: (tag: string) => `events:tag:${tag}`,
-  allListPattern: 'events:list:*',
-  allTagPattern: 'events:tag:*',
-  homepage: 'events:homepage',
-};
-
-const TTL = {
-  list: 300, // 5 phút
-  item: 3600, // 1 giờ
-  tag: 300, // 5 phút
-  homepage: 300,
-};
+import { RedisKeys, RedisTTL } from 'src/common/constant/redis-key.constant';
 
 @Injectable()
 export class EventService {
@@ -74,7 +58,8 @@ export class EventService {
       tag,
       dateFilter,
     });
-    const cacheKey = CacheKeys.eventList(offset, limit, filterKey);
+    const cacheKey = RedisKeys.event.list(offset, limit, filterKey);
+
 
     const cached = await this.redisService.get(cacheKey);
     if (cached) {
@@ -113,17 +98,17 @@ export class EventService {
       totalPages: Math.ceil(total / limit),
     };
 
-    await this.redisService.set(cacheKey, JSON.stringify(result), TTL.list);
+    await this.redisService.set(cacheKey, JSON.stringify(result), RedisTTL.event.list);
     return result;
   }
 
   async findEventById(id: string): Promise<Event> {
-    const cacheKey = CacheKeys.eventItem(id);
+    const cacheKey = RedisKeys.event.item(id);
+
     const cached = await this.redisService.get(cacheKey);
 
     if (cached) {
       this.logger.log(`🔥 Cache Hit: events:item:${id}`);
-      // FIX: Cast return
       return JSON.parse(cached) as Event;
     }
 
@@ -133,12 +118,12 @@ export class EventService {
     });
     if (!event) throw new NotFoundException(`Event ${id} not found`);
 
-    await this.redisService.set(cacheKey, JSON.stringify(event), TTL.item);
+    await this.redisService.set(cacheKey, JSON.stringify(event), RedisTTL.event.item);
     return event;
   }
 
   async findByTag(tag: string, limit: number): Promise<Event[]> {
-    const cacheKey = CacheKeys.eventTag(tag);
+    const cacheKey = RedisKeys.event.tag(tag)
     const cached = await this.redisService.get(cacheKey);
 
     if (cached) {
@@ -155,12 +140,12 @@ export class EventService {
       .take(limit)
       .getMany();
 
-    await this.redisService.set(cacheKey, JSON.stringify(data), TTL.tag);
+    await this.redisService.set(cacheKey, JSON.stringify(data), RedisTTL.event.tag);
     return data;
   }
 
   async getHomepageData(): Promise<HomepageData> {
-    const cacheKey = CacheKeys.homepage;
+    const cacheKey = RedisKeys.event.homepage;
     const cached = await this.redisService.get(cacheKey);
 
     if (cached) {
@@ -177,7 +162,7 @@ export class EventService {
     ]);
 
     const result: HomepageData = { featured, trending, newest, special };
-    await this.redisService.set(cacheKey, JSON.stringify(result), TTL.homepage);
+    await this.redisService.set(cacheKey, JSON.stringify(result), RedisTTL.event.homepage);
     return result;
   }
 
@@ -189,9 +174,9 @@ export class EventService {
     await Promise.all([
       this.elasticService.updateEvent(saved),
       this.redisService.set(
-        CacheKeys.eventItem(id),
+        RedisKeys.event.item(id),
         JSON.stringify(saved),
-        TTL.item,
+        RedisTTL.event.item,
       ),
       this.invalidateListCaches(),
     ]);
@@ -205,7 +190,7 @@ export class EventService {
 
     await Promise.all([
       this.elasticService.deleteEvent(id),
-      this.redisService.del(CacheKeys.eventItem(id)),
+      this.redisService.del(RedisKeys.event.item(id)),
       this.invalidateListCaches(),
     ]);
   }
@@ -273,9 +258,9 @@ export class EventService {
 
   private async invalidateListCaches() {
     await Promise.all([
-      this.redisService.clearByPattern(CacheKeys.allListPattern),
-      this.redisService.clearByPattern(CacheKeys.allTagPattern),
-      this.redisService.del(CacheKeys.homepage),
+      this.redisService.clearByPattern(RedisKeys.event.patterns.allList),
+      this.redisService.clearByPattern(RedisKeys.event.patterns.allTag),
+      this.redisService.del(RedisKeys.event.homepage),
     ]);
   }
 }
