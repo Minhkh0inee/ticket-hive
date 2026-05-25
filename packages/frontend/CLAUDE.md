@@ -33,53 +33,64 @@ This is the frontend package of **TicketHive**, a ticket booking platform. It's 
 **Environment variables** (copy `.env.example` to `.env`):
 - `VITE_API_URL` — backend API base URL (default: `http://localhost:8080`)
 - `VITE_ENABLE_MSW` — enable Mock Service Worker for API mocking during development
+- `VITE_CLOUDINARY_CLOUD_NAME` — Cloudinary cloud name for image optimization via `optimizeImage()` in `src/utils/image.ts`
 
 ### Directory Layout
 ```
 src/
 ├── components/
 │   ├── auth/            # LoginForm, RegisterForm
+│   ├── checkout/        # CountDown, ExpireModal, OrderSummary, PaymentForm
 │   ├── common/          # AuthRequiredDialog, SessionExpiredDialog, BookingDetailDialog,
 │   │                    # CategoryBadge, EventCard, EventCardSkeleton, EventGridCard,
-│   │                    # Pagination, ScrollToTop, SectionTitle
+│   │                    # GlobalErrorBoundary, Pagination, ScrollToTop, SectionTitle
 │   ├── event-detail/    # HeroGallery, EventInfoPanel, EventDescription, EventOrganizer,
 │   │                    # EventSidebar, EventMoreSection, EventPromoBanner, EventRelatedSection
 │   │                    # schedule/: EventSchedule, SeatMapDialog, SeatMapGrid, SectionList,
-│   │                    #            SeatButton, SeatChip, useSeatMap, constants
+│   │                    #            SeatButton, SeatCancelDialog, SeatChip, useSeatMap, constants
 │   ├── events/          # CategoryEventRow, CategoryEventRowSkeleton, CitiesSection,
 │   │                    # EventDetailError, EventDetailSkeleton, EventFilterBar, EventGrid,
-│   │                    # TrendingSection, WeekendMonthSection
-│   ├── home/            # HeroBanner, HeroBannerSkeleton, CategoryNav, EventRow
+│   │                    # TrendingCard, WeekendMonthSection
+│   ├── home/            # CategoryNav, EventRow, HeroBannerSkeleton
+│   │   └── sections/    # HeroBanner, SpecialSection, TrendingSection, LatestSection,
+│   │                    # MusicSection, TheatreSection, FestivalSection, ConferenceSection, SportsSection
 │   ├── layout/          # MainLayout, Header, Footer, SearchBar
 │   ├── ui/              # shadcn/ui generated components (do not edit manually)
 │   └── ProctectedRoute.tsx  # Route guard (note: intentional typo in filename)
 ├── hooks/               # useAppDispatch, useAppSelector (typed Redux hooks)
+│                        # useBookingSummary, useCheckoutExpire, useCountDown
 ├── lib/                 # axios.ts (configured instance + interceptors), format.ts, utils.ts
 ├── mocks/               # Mock data: categories.mock.ts (for MSW / dev)
-├── pages/               # 9 route-level page components
+├── pages/               # 11 route-level page components
 ├── services/            # auth.service.ts
 ├── stores/
 │   ├── slices/          # auth, event, home, seat, booking, category
 │   └── sagas/           # auth, event, home, seat.sage, booking, category.sage, rootSaga
 ├── types/               # event.types.ts (Event, EventDetail, Seat, Booking, Category, enums)
-└── utils/               # seat.utils.ts, applyDateFilter.ts
+└── utils/               # seat.utils.ts, applyDateFilter.ts, image.ts
 ```
 
 ### Routing
 
-| Page | Path | Auth |
-|------|------|------|
-| HomePage | `/` | public |
-| EventsPage | `/events` | public |
-| EventDetailPage | `/events/:id` | public |
-| CheckoutPage | `/checkout` | public |
-| ConfirmationPage | `/confirmation/:bookingId` | public |
-| LoginPage | `/login` | public |
-| RegisterPage | `/register` | public |
-| ProfilePage | `/profile` | **protected** |
-| MyTicketsPage | `/my-tickets` | **protected** |
+| Page | Path | Auth | Layout |
+|------|------|------|--------|
+| HomePage | `/` | public | MainLayout |
+| EventsPage | `/events` | public | MainLayout |
+| EventDetailPage | `/events/:id` | public | MainLayout |
+| ProfilePage | `/profile` | **protected** | MainLayout |
+| MyTicketsPage | `/my-tickets` | **protected** | MainLayout |
+| LoginPage | `/login` | public | none |
+| RegisterPage | `/register` | public | none |
+| CheckoutPage | `/checkout` | public | none |
+| ConfirmationPage | `/confirmation/:bookingId` | public | none |
+| PaymentSuccessPage | `/payment/success` | public | none |
+| PaymentCancelPage | `/payment/cancel` | public | none |
 
-Protected routes use `ProtectedRoute` component (`src/components/ProctectedRoute.tsx` — note the typo in the filename; keep it as-is).
+Protected routes use `ProtectedRoute` component (`src/components/ProctectedRoute.tsx` — note the typo in the filename; keep it as-is). Checkout, confirmation, and payment pages do **not** use `MainLayout`.
+
+### App Bootstrap
+
+`main.tsx` wraps the app with `GlobalErrorBoundary` (outside Redux) then `Provider`. On startup, it reads `accessToken` and `refreshToken` from `localStorage` and dispatches `setTokens` + `fetchProfileRequest` to rehydrate the auth session without a full login.
 
 ### Redux Store Shape
 
@@ -90,6 +101,7 @@ Protected routes use `ProtectedRoute` component (`src/components/ProctectedRoute
     accessToken: string | null
     refreshToken: string | null
     loading: boolean
+    profileLoading: boolean   // true while GET /auth/profile is in-flight
     error: string | null
     sessionExpired: boolean
   }
@@ -144,8 +156,14 @@ Protected routes use `ProtectedRoute` component (`src/components/ProctectedRoute
 
 - `Event` — id, title, description, venue, city, category, eventDate, bannerUrl, totalSeats, availableSeats, basePrice, organizer
 - `EventDetail` — eventId, endDate, venueAddress, bannerUrl, description, ticketTypes, organizer, isSoldOut
+- `EventOrganizer` — id, firstName, lastName, email
+- `TicketType` — id, name, price, description, available, section
 - `Seat` — id, row, number, label, section, status, priceModifier, isLocked, lockedBy
-- `Booking` — id, seatIds, attendeeName, attendeeEmail, attendeePhone, totalPrice, status, user, event, createdAt
+- `SeatStatus` — `'available' | 'locked' | 'booked'`
+- `Booking` — id, seatIds, attendeeName, attendeeEmail, attendeePhone, totalPrice, status, user, event, createdAt, updatedAt, deletedAt
+- `BookingUser` — id, firstName, lastName, email
+- `BookingEvent` — id, title, venue, city, eventDate, bannerUrl
+- `CreateBookingDto` — eventId, seatIds, attendeeName, attendeeEmail, attendeePhone?
 - `Category` — id, label, icon (UI display category, distinct from `EventCategory`)
 - `EventCategory` — id, name, slug (backend category model)
 - `SeatSection` — `'floor' | 'balcony' | 'vip' | 'general'`
@@ -155,11 +173,14 @@ Protected routes use `ProtectedRoute` component (`src/components/ProctectedRoute
 
 - `baseURL` from `VITE_API_URL` env
 - Request interceptor: injects `Authorization: Bearer <token>` from Redux store
-- Response interceptor: queued token refresh on 401 — prevents concurrent refresh storms; dispatches `refreshTokenFailed` on refresh failure → triggers `sessionExpired`
+- Response interceptor:
+  - **429**: shows a Sonner toast with `retry-after` header value; does not retry
+  - **401**: queued token refresh (prevents concurrent refresh storms); dispatches `refreshTokenFailed` on failure → sets `sessionExpired: true`
+- Tokens are persisted to `localStorage` on login/refresh and rehydrated on boot in `main.tsx`
 
 ### State Management Pattern
 
-Uses **Redux Toolkit** for slice/action definitions and **Redux Saga** for async side effects. Service functions in `services/` handle raw HTTP calls; sagas orchestrate async flows and dispatch actions.
+Uses **Redux Toolkit** for slice/action definitions and **Redux Saga** for async side effects. Service functions in `services/` handle raw HTTP calls; sagas orchestrate async flows and dispatch actions. **Thunk middleware is disabled** (`getDefaultMiddleware({ thunk: false })`).
 
 ### Backend Context
 
@@ -196,11 +217,12 @@ The API runs on port 8080:
 - Toasts: use Sonner (`import { toast } from 'sonner'`) for non-blocking feedback
 - Formatting helpers: `fmtDate`, `fmtDateRange`, `fmtPrice` from `@/lib/format` (vi-VN locale)
 - Class merging: `cn(...)` from `@/lib/utils` (clsx + tailwind-merge)
+- Image optimization: `optimizeImage(url, width?)` from `@/utils/image` — transforms any URL through Cloudinary (requires `VITE_CLOUDINARY_CLOUD_NAME`)
 
 ## Current Status
 Phase 4 UI complete — all pages, Redux slices/sagas, and core components are implemented. Service layer is partially connected (`auth.service.ts` exists; other services call API directly via axios in sagas).
 
-**Implemented:** All 9 pages, 6 Redux slices + sagas (auth, event, home, seat, booking, category), seat selection flow, checkout with countdown, auth with token refresh, skeleton loading states, MSW mock data (categories), ProtectedRoute guard.
+**Implemented:** All 11 pages, 6 Redux slices + sagas (auth, event, home, seat, booking, category), seat selection flow, checkout with countdown, auth with token refresh, skeleton loading states, MSW mock data (categories), ProtectedRoute guard.
 
 ## Notes
 - Tailwind v4: do not use `@apply` with utility classes — syntax differs from v3
@@ -212,3 +234,4 @@ Phase 4 UI complete — all pages, Redux slices/sagas, and core components are i
 - Booking fee: 5% on subtotal + seat section price modifiers
 - Two saga files are intentionally misnamed with `.sage.ts` extension: `seat.sage.ts` and `category.sage.ts` — keep as-is to avoid import breakage
 - `ProtectedRoute` component file is named `ProctectedRoute.tsx` (typo) — keep as-is
+- `SessionExpiredDialog` is currently commented out in `App.tsx`
