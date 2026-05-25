@@ -34,8 +34,7 @@ import { randomUUID } from 'crypto';
             : undefined,
         redact: ['req.headers.authorization', 'req.body.password'],
         genReqId: (req, res) => {
-          const id =
-            (req.headers['x-request-id'] as string) || randomUUID();
+          const id = (req.headers['x-request-id'] as string) || randomUUID();
           res.setHeader('X-Request-Id', id);
           return id;
         },

@@ -60,7 +60,6 @@ export class EventService {
     });
     const cacheKey = RedisKeys.event.list(offset, limit, filterKey);
 
-
     const cached = await this.redisService.get(cacheKey);
     if (cached) {
       this.logger.log('🔥 Cache Hit: events list');
@@ -98,7 +97,11 @@ export class EventService {
       totalPages: Math.ceil(total / limit),
     };
 
-    await this.redisService.set(cacheKey, JSON.stringify(result), RedisTTL.event.list);
+    await this.redisService.set(
+      cacheKey,
+      JSON.stringify(result),
+      RedisTTL.event.list,
+    );
     return result;
   }
 
@@ -118,12 +121,16 @@ export class EventService {
     });
     if (!event) throw new NotFoundException(`Event ${id} not found`);
 
-    await this.redisService.set(cacheKey, JSON.stringify(event), RedisTTL.event.item);
+    await this.redisService.set(
+      cacheKey,
+      JSON.stringify(event),
+      RedisTTL.event.item,
+    );
     return event;
   }
 
   async findByTag(tag: string, limit: number): Promise<Event[]> {
-    const cacheKey = RedisKeys.event.tag(tag)
+    const cacheKey = RedisKeys.event.tag(tag);
     const cached = await this.redisService.get(cacheKey);
 
     if (cached) {
@@ -140,7 +147,11 @@ export class EventService {
       .take(limit)
       .getMany();
 
-    await this.redisService.set(cacheKey, JSON.stringify(data), RedisTTL.event.tag);
+    await this.redisService.set(
+      cacheKey,
+      JSON.stringify(data),
+      RedisTTL.event.tag,
+    );
     return data;
   }
 
@@ -162,7 +173,11 @@ export class EventService {
     ]);
 
     const result: HomepageData = { featured, trending, newest, special };
-    await this.redisService.set(cacheKey, JSON.stringify(result), RedisTTL.event.homepage);
+    await this.redisService.set(
+      cacheKey,
+      JSON.stringify(result),
+      RedisTTL.event.homepage,
+    );
     return result;
   }
 

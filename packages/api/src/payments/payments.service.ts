@@ -15,6 +15,9 @@ import { Seat, SeatStatus } from '../seats/entities/seats.entity';
 import { Event } from '../event/entities/event.entity';
 import { ClientProxy } from '@nestjs/microservices';
 
+const errMsg = (e: unknown): string =>
+  e instanceof Error ? e.message : String(e);
+
 @Injectable()
 export class PaymentsService {
   private readonly logger = new Logger(PaymentsService.name);
@@ -54,7 +57,7 @@ export class PaymentsService {
       };
     } catch (error) {
       throw new BadRequestException(
-        `Failed to create payment link: ${error.message}`,
+        `Failed to create payment link: ${errMsg(error)}`,
       );
     }
   }
@@ -64,8 +67,8 @@ export class PaymentsService {
       const data = await this.payOS.paymentRequests.get(orderCode);
       return { success: true, data };
     } catch (error) {
-      this.logger.error(`❌ Get payment info failed: ${error.message}`);
-      throw new BadRequestException(error.message);
+      this.logger.error(`❌ Get payment info failed: ${errMsg(error)}`);
+      throw new BadRequestException(errMsg(error));
     }
   }
 
@@ -75,8 +78,8 @@ export class PaymentsService {
       this.logger.log(`🚫 Cancelled payment - orderCode: ${orderCode}`);
       return { success: true, data };
     } catch (error) {
-      this.logger.error(`❌ Cancel payment failed: ${error.message}`);
-      throw new BadRequestException(error.message);
+      this.logger.error(`❌ Cancel payment failed: ${errMsg(error)}`);
+      throw new BadRequestException(errMsg(error));
     }
   }
 
@@ -88,14 +91,17 @@ export class PaymentsService {
         data: webhookData,
       };
     } catch (error) {
-      this.logger.error(`Webhook verify failed: ${error.message}`);
+      this.logger.error(`Webhook verify failed: ${errMsg(error)}`);
       throw new BadRequestException(
-        `Invalid webhook signature: ${error.message}`,
+        `Invalid webhook signature: ${errMsg(error)}`,
       );
     }
   }
 
-  async handlePaymentWebhook(webhookPayload: { success: boolean; data: WebhookPayosBody }) {
+  async handlePaymentWebhook(webhookPayload: {
+    success: boolean;
+    data: WebhookPayosBody;
+  }) {
     const innerData = webhookPayload?.data ?? webhookPayload;
     const { code, orderCode } = innerData;
 
@@ -104,7 +110,9 @@ export class PaymentsService {
     } else if (code === 'CANCELLED') {
       await this.handlePaymentCancelled(orderCode);
     } else {
-      this.logger.warn(`⚠️ Unknown webhook code: ${code} - orderCode: ${orderCode}`);
+      this.logger.warn(
+        `⚠️ Unknown webhook code: ${code} - orderCode: ${orderCode}`,
+      );
     }
   }
 
@@ -124,8 +132,12 @@ export class PaymentsService {
       return;
     }
 
-    await this.paymentRepo.update(payment.id, { status: PaymentStatus.COMPLETED });
-    await this.bookingRepo.update(payment.booking.id, { status: BookingStatus.CONFIRMED });
+    await this.paymentRepo.update(payment.id, {
+      status: PaymentStatus.COMPLETED,
+    });
+    await this.bookingRepo.update(payment.booking.id, {
+      status: BookingStatus.CONFIRMED,
+    });
 
     const b = payment.booking;
     this.client
@@ -162,10 +174,19 @@ export class PaymentsService {
     }
 
     const b = payment.booking;
-    await this.paymentRepo.update(payment.id, { status: PaymentStatus.CANCELLED });
+    await this.paymentRepo.update(payment.id, {
+      status: PaymentStatus.CANCELLED,
+    });
     await this.bookingRepo.update(b.id, { status: BookingStatus.CANCELLED });
-    await this.seatRepo.update({ id: In(b.seatIds) }, { status: SeatStatus.AVAILABLE });
-    await this.eventRepo.increment({ id: b.event.id }, 'availableSeats', b.seatIds.length);
+    await this.seatRepo.update(
+      { id: In(b.seatIds) },
+      { status: SeatStatus.AVAILABLE },
+    );
+    await this.eventRepo.increment(
+      { id: b.event.id },
+      'availableSeats',
+      b.seatIds.length,
+    );
 
     this.logger.warn(`🚫 Payment CANCELLED - orderCode: ${orderCode}`);
   }
@@ -179,7 +200,7 @@ export class PaymentsService {
       };
     } catch (error) {
       throw new BadRequestException(
-        `Failed to confirm webhook: ${error.message}`,
+        `Failed to confirm webhook: ${errMsg(error)}`,
       );
     }
   }

@@ -1,4 +1,4 @@
- import {
+import {
   BadRequestException,
   ForbiddenException,
   Inject,
@@ -132,8 +132,9 @@ export class BookingsService {
       return { booking, paymentUrl: paymentResult.data?.checkoutUrl };
     } catch (error) {
       // Compensate: mark booking cancelled, restore seats and event count
+      const message = error instanceof Error ? error.message : String(error);
       this.logger.error(
-        `Payment link creation failed for booking ${booking.id}: ${error.message}`,
+        `Payment link creation failed for booking ${booking.id}: ${message}`,
       );
       await this.bookingRepo.update(booking.id, {
         status: BookingStatus.CANCELLED,
@@ -150,7 +151,7 @@ export class BookingsService {
         dto.seatIds.length,
       );
       throw new BadRequestException(
-        `Failed to create payment link: ${error.message}`,
+        `Failed to create payment link: ${message}`,
       );
     }
   }

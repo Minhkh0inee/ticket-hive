@@ -15,7 +15,6 @@ export const RedisKeys = {
     tag: (tag: string) => `events:tag:${tag}`,
     homepage: 'events:homepage',
 
-
     patterns: {
       allList: 'events:list:*',
       allTag: 'events:tag:*',
@@ -32,9 +31,9 @@ export const RedisTTL = {
     lock: 600,
   },
   event: {
-    item: 3600,     // 1 giờ
-    list: 300,      // 5 phút
-    tag: 300,       // 5 phút
-    homepage: 300,  // 5 phút
+    item: 3600, // 1 giờ
+    list: 300, // 5 phút
+    tag: 300, // 5 phút
+    homepage: 300, // 5 phút
   },
 } as const;

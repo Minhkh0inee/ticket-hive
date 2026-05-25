@@ -8,7 +8,12 @@ export class RedisService {
   constructor(@InjectRedis() private readonly redis: Redis) {}
 
   async setRefreshToken(userId: string, token: string, ttlSeconds: number) {
-    await this.redis.set(RedisKeys.auth.refreshToken(userId), token, 'EX', ttlSeconds);
+    await this.redis.set(
+      RedisKeys.auth.refreshToken(userId),
+      token,
+      'EX',
+      ttlSeconds,
+    );
   }
 
   async getRefreshToken(userId: string): Promise<string | null> {
@@ -70,7 +75,7 @@ export class RedisService {
     eventId: string,
     seatIds: string[],
   ): Promise<(string | null)[]> {
-    const keys = seatIds.map((seatId) => RedisKeys.seat.lock(eventId, seatId),);
+    const keys = seatIds.map((seatId) => RedisKeys.seat.lock(eventId, seatId));
     return this.redis.mget(...keys);
   }
 
@@ -91,7 +96,13 @@ export class RedisService {
     let cursor = '0';
 
     do {
-      const [nextCursor, batch] = await this.redis.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
+      const [nextCursor, batch] = await this.redis.scan(
+        cursor,
+        'MATCH',
+        pattern,
+        'COUNT',
+        100,
+      );
       cursor = nextCursor;
       keys.push(...batch);
     } while (cursor !== '0');
