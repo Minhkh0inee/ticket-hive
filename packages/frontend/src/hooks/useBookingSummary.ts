@@ -24,7 +24,7 @@ export function useBookingSummary() {
     const bookingFee = Math.round(subtotal * BOOKING_FEE_RATE)
     const total = subtotal + bookingFee
     return { selectedSeatObjects, sectionConfig, unitPrice, subtotal, bookingFee, total, currentEvent }
-  }, [seats, selectedSeats, currentEvent?.basePrice])
+  }, [seats, selectedSeats, currentEvent])
 
   return summary
 }

@@ -56,7 +56,7 @@ export function CheckoutPage() {
     }
     dispatch(clearSelection())
     navigate(-1)
-  }, [currentEvent?.id, selectedSeats, dispatch, navigate])
+  }, [currentEvent, selectedSeats, dispatch, navigate])
 
   useEffect(() => {
     function handleBeforeUnload() {
