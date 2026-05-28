@@ -70,7 +70,7 @@ export class AuthService {
     await this.redisService.setRefreshToken(
       user.id,
       newRefreshToken,
-      60 * 60 * 24 * 7,
+      RedisTTL.auth.refreshToken,
     );
 
     return { accessToken, refreshToken: newRefreshToken };

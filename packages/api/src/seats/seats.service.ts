@@ -5,19 +5,25 @@ import {
 } from '@nestjs/common';
 import { RedisService } from 'src/redis/redis.service';
 import { SeatEventDto } from './dto/seat.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class SeatsService {
-  constructor(private readonly redisService: RedisService) {}
+  private readonly seatLockTtl: number
+  constructor(
+    private readonly redisService: RedisService,
+    private readonly configService: ConfigService,
+  ) {
+    this.seatLockTtl = this.configService.get<number>('SEAT_LOCK_TTL_SECONDS', 600)
+  }
 
   async seatLock(seatId: string, body: SeatEventDto, userId: string) {
-    const SEAT_LOCK_TTL = 10 * 60;
     const { eventId } = body;
     const locked = await this.redisService.seatLock(
       eventId,
       seatId,
       userId,
-      SEAT_LOCK_TTL,
+      this.seatLockTtl
     );
     if (!locked)
       throw new ConflictException('Seat is already locked by another user');
