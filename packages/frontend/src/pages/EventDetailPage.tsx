@@ -2,6 +2,7 @@ import { useMemo, useCallback, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { EventStatus } from '@/types/event.types'
 import { HeroGallery } from '@/components/event-detail/HeroGallery'
 import { EventInfoPanel } from '@/components/event-detail/EventInfoPanel'
 import { EventDescription } from '@/components/event-detail/EventDescription'
@@ -73,7 +74,8 @@ export function EventDetailPage() {
     )
   }
 
-  const isSoldOut = currentEvent!.availableSeats === 0
+  const eventStatus = currentEvent!.status ??
+    (currentEvent!.availableSeats === 0 ? EventStatus.SOLD_OUT : EventStatus.UPCOMING)
 
   return (
     <div className="min-h-screen bg-[oklch(0.145_0_0)]">
@@ -94,7 +96,7 @@ export function EventDetailPage() {
               eventDate={currentEvent!.eventDate}
               venue={currentEvent!.venue}
               basePrice={String(currentEvent!.basePrice)}
-              isSoldOut={isSoldOut}
+              eventStatus={eventStatus}
               onBuyClick={handleBuyClick}
             />
             <HeroGallery
@@ -111,6 +113,7 @@ export function EventDetailPage() {
                   eventId={id!}
                   eventDate={currentEvent!.eventDate}
                   basePrice={currentEvent!.basePrice}
+                  eventStatus={eventStatus}
                 />
               </div>
               <EventOrganizer organizer={currentEvent!.organizer} /> 

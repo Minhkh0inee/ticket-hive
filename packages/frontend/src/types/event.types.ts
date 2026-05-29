@@ -4,6 +4,14 @@ export interface EventCategory {
   slug: string
 }
 
+export enum EventStatus {
+  UPCOMING = 'upcoming',
+  SOLD_OUT = 'sold_out',
+  ONGOING = 'ongoing',
+  ENDED = 'ended',
+  CANCELLED = 'cancelled',
+}
+
 export interface Event {
   id: string
   title: string
@@ -17,6 +25,7 @@ export interface Event {
   availableSeats: number
   basePrice: number
   organizer: EventOrganizer
+  status?: EventStatus
 }
 
 export type SeatSection = 'floor' | 'balcony' | 'vip' | 'general'

@@ -26,11 +26,11 @@ This is the frontend package of **TicketHive**, a ticket booking platform. It's 
 
 **Stack:** React 19, Redux Toolkit + Redux Saga, Tailwind CSS v4, shadcn/ui, Vite 7, TypeScript 5
 
-**Additional libraries:** React Router DOM 7, React Hook Form + Zod, Axios, Sonner (toasts), Next Themes
+**Additional libraries:** React Router DOM 7, React Hook Form + Zod, Axios, Sonner (toasts), Next Themes, Lucide React (icons), `@fontsource-variable/geist` (Geist variable font)
 
 **Path alias:** `@` maps to `./src` (configured in both `vite.config.ts` and `tsconfig.json`).
 
-**Environment variables** (copy `.env.example` to `.env`):
+**Environment variables** — `.env` is loaded from the **monorepo root** (`../../`), not from `packages/frontend/`. `vite.config.ts` sets `envDir` accordingly. Copy `.env.example` at the root and run `npm run dev` from there (or use `npm run dev:frontend`):
 - `VITE_API_URL` — backend API base URL (default: `http://localhost:8080`)
 - `VITE_ENABLE_MSW` — enable Mock Service Worker for API mocking during development
 - `VITE_CLOUDINARY_CLOUD_NAME` — Cloudinary cloud name for image optimization via `optimizeImage()` in `src/utils/image.ts`
@@ -145,7 +145,7 @@ Protected routes use `ProtectedRoute` component (`src/components/ProctectedRoute
 
 ### Key Sagas
 
-- **auth.saga** — login (POST /auth/login + GET /auth/profile), register, token refresh
+- **auth.saga** — login (POST /auth/login + GET /auth/profile), register (auto-logs-in by re-dispatching `loginRequest` on success), token refresh
 - **event.saga** — fetch events list (with filters), fetch event detail
 - **home.saga** — sequential featured/special/trending/newEvents (dedup via ignoreIds), then parallel category fetches
 - **seat.saga** (`seat.sage.ts`) — fetch seats, lock/unlock seats (Promise.all), toast on success/error
@@ -177,6 +177,7 @@ Protected routes use `ProtectedRoute` component (`src/components/ProctectedRoute
   - **429**: shows a Sonner toast with `retry-after` header value; does not retry
   - **401**: queued token refresh (prevents concurrent refresh storms); dispatches `refreshTokenFailed` on failure → sets `sessionExpired: true`
 - Tokens are persisted to `localStorage` on login/refresh and rehydrated on boot in `main.tsx`
+- **API response envelope**: all endpoints return `{ data: { data: T } }` — sagas read `response.data.data` to get the payload
 
 ### State Management Pattern
 
@@ -234,4 +235,4 @@ Phase 4 UI complete — all pages, Redux slices/sagas, and core components are i
 - Booking fee: 5% on subtotal + seat section price modifiers
 - Two saga files are intentionally misnamed with `.sage.ts` extension: `seat.sage.ts` and `category.sage.ts` — keep as-is to avoid import breakage
 - `ProtectedRoute` component file is named `ProctectedRoute.tsx` (typo) — keep as-is
-- `SessionExpiredDialog` is currently commented out in `App.tsx`
+- `SessionExpiredDialog` is rendered globally in `App.tsx` (not inside `MainLayout`) — it listens to `auth.sessionExpired` and shows a modal prompting re-login

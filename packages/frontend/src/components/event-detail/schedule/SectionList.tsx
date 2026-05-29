@@ -15,10 +15,11 @@ interface SectionListProps {
   isLoading: boolean
   sectionSummaries: SectionSummary[]
   basePrice: number
+  isBookable?: boolean
   onSelect: (section: SeatSection) => void
 }
 
-export function SectionList({ isLoading, sectionSummaries, basePrice, onSelect }: SectionListProps) {
+export function SectionList({ isLoading, sectionSummaries, basePrice, isBookable = true, onSelect }: SectionListProps) {
   if (isLoading) {
     return (
       <div className="space-y-2 mt-4">
@@ -72,8 +73,13 @@ export function SectionList({ isLoading, sectionSummaries, basePrice, onSelect }
                 ) : (
                   <Button
                     size="sm"
-                    onClick={() => onSelect(section)}
-                    className="rounded-lg text-xs h-7 bg-[oklch(0.75_0.18_350)] hover:bg-[oklch(0.7_0.18_350)] text-white whitespace-nowrap"
+                    disabled={!isBookable}
+                    onClick={isBookable ? () => onSelect(section) : undefined}
+                    className={`rounded-lg text-xs h-7 whitespace-nowrap ${
+                      isBookable
+                        ? 'bg-[oklch(0.75_0.18_350)] hover:bg-[oklch(0.7_0.18_350)] text-white'
+                        : 'bg-[oklch(0.28_0_0)] text-[oklch(0.5_0_0)] cursor-not-allowed hover:bg-[oklch(0.28_0_0)]'
+                    }`}
                   >
                     Đặt vé
                   </Button>

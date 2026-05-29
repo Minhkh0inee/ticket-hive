@@ -19,6 +19,14 @@ export enum EventTag {
   NEW = 'new',
 }
 
+export enum EventStatus {
+  UPCOMING = 'upcoming',
+  SOLD_OUT = 'sold_out',
+  ONGOING = 'ongoing',
+  ENDED = 'ended',
+  CANCELLED = 'cancelled',
+}
+
 @Entity()
 export class Event extends AbstractEntity {
   @Column({
@@ -62,6 +70,9 @@ export class Event extends AbstractEntity {
   @Index()
   @Column({ type: 'enum', enum: EventTag, nullable: true })
   tag: EventTag | null;
+
+  @Column({ type: 'enum', enum: EventStatus, default: EventStatus.UPCOMING })
+  status: EventStatus;
 
   @ManyToOne(() => User, (user) => user.events)
   organizer: User;

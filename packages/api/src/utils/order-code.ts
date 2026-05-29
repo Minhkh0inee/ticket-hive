@@ -1,7 +1,7 @@
-import { customAlphabet } from 'nanoid'
+import { customAlphabet } from 'nanoid';
 
-const nanoid = customAlphabet('0123456789', 12)
+const nanoid = customAlphabet('0123456789', 12);
 
 export function generateOrderCode(): number {
-  return Number(nanoid())
+  return Number(nanoid());
 }

@@ -5,18 +5,27 @@ import { fmtDateRange } from '@/lib/format'
 import { SeatMapDialog } from './SeatMapDialog'
 import { useSeatMap } from './useSeatMap'
 import { SectionList } from './SectionList'
+import { EventStatus } from '@/types/event.types'
+
+const STATUS_NOTICE: Partial<Record<EventStatus, string>> = {
+  [EventStatus.ONGOING]:   'Sự kiện đang diễn ra, không thể đặt vé online.',
+  [EventStatus.ENDED]:     'Sự kiện đã kết thúc.',
+  [EventStatus.CANCELLED]: 'Sự kiện đã bị hủy.',
+}
 
 interface EventScheduleProps {
   eventDate: string
   endDate?: string
   eventId: string
   basePrice: number
+  eventStatus?: EventStatus
 }
 
 export const EventSchedule = memo(function EventSchedule({
-  eventDate, endDate, eventId, basePrice
+  eventDate, endDate, eventId, basePrice, eventStatus
 }: EventScheduleProps) {
   const dateText = useMemo(() => fmtDateRange(eventDate, endDate), [eventDate, endDate])
+  const isBookable = !eventStatus || eventStatus === EventStatus.UPCOMING
   const {
     seats, selectedSeats, isLoading,
     selectedSection, sectionSummaries, allRowsGrouped,
@@ -25,6 +34,7 @@ export const EventSchedule = memo(function EventSchedule({
 
   const modifier = sectionSummaries.find(s => s.section === selectedSection)?.priceModifier ?? 1
   const price = basePrice * modifier
+  const statusNotice = eventStatus ? STATUS_NOTICE[eventStatus] : undefined
 
   return (
     <>
@@ -42,15 +52,22 @@ export const EventSchedule = memo(function EventSchedule({
           <time dateTime={eventDate}>{dateText}</time>
         </div>
 
-        <SectionList
-          isLoading={isLoading}
-          sectionSummaries={sectionSummaries}
-          basePrice={basePrice}
-          onSelect={openSeatMap}
-        />
+        {statusNotice ? (
+          <p className="mt-4 text-sm text-[oklch(0.55_0_0)] text-center py-4">
+            {statusNotice}
+          </p>
+        ) : (
+          <SectionList
+            isLoading={isLoading}
+            sectionSummaries={sectionSummaries}
+            basePrice={basePrice}
+            isBookable={isBookable}
+            onSelect={openSeatMap}
+          />
+        )}
       </section>
 
-      {selectedSection && (
+      {selectedSection && isBookable && (
         <SeatMapDialog
           eventId={eventId}
           selectedSection={selectedSection}
