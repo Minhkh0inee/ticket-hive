@@ -3,6 +3,7 @@ import { Calendar, MapPin, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { fmtDateRange, fmtPrice } from '@/lib/format'
+import { EventStatus } from '@/types/event.types'
 
 interface EventInfoPanelProps {
   title: string
@@ -11,8 +12,18 @@ interface EventInfoPanelProps {
   venue: string
   venueAddress?: string
   basePrice: string
-  isSoldOut?: boolean
+  eventStatus?: EventStatus
   onBuyClick?: () => void
+}
+
+function getCtaConfig(eventStatus?: EventStatus): { label: string; disabled: boolean } {
+  switch (eventStatus) {
+    case EventStatus.CANCELLED: return { label: 'Sự kiện đã hủy', disabled: true }
+    case EventStatus.ENDED:     return { label: 'Sự kiện đã kết thúc', disabled: true }
+    case EventStatus.ONGOING:   return { label: 'Đang diễn ra', disabled: true }
+    case EventStatus.SOLD_OUT:  return { label: 'Vé ngừng bán online', disabled: true }
+    default:                    return { label: 'Mua vé ngay', disabled: false }
+  }
 }
 
 export const EventInfoPanel = memo(function EventInfoPanel({
@@ -22,11 +33,12 @@ export const EventInfoPanel = memo(function EventInfoPanel({
   venue,
   venueAddress,
   basePrice,
-  isSoldOut,
+  eventStatus,
   onBuyClick,
 }: EventInfoPanelProps) {
   const dateText = useMemo(() => fmtDateRange(eventDate, endDate), [eventDate, endDate])
   const priceNum = useMemo(() => parseInt(basePrice, 10), [basePrice])
+  const { label: ctaLabel, disabled: ctaDisabled } = getCtaConfig(eventStatus)
 
   return (
     <div className="bg-[oklch(0.19_0_0)] border border-[oklch(0.26_0_0)] rounded-2xl p-6 flex flex-col h-full">
@@ -75,16 +87,16 @@ export const EventInfoPanel = memo(function EventInfoPanel({
 
       {/* CTA */}
       <Button
-        disabled={isSoldOut}
-        onClick={!isSoldOut ? onBuyClick : undefined}
+        disabled={ctaDisabled}
+        onClick={!ctaDisabled ? onBuyClick : undefined}
         className={`w-full h-11 rounded-xl text-sm font-semibold ${
-          isSoldOut
+          ctaDisabled
             ? 'bg-[oklch(0.28_0_0)] text-[oklch(0.5_0_0)] cursor-not-allowed hover:bg-[oklch(0.28_0_0)]'
             : 'bg-[oklch(0.6_0.2_250)] hover:bg-[oklch(0.54_0.2_250)] active:bg-[oklch(0.5_0.2_250)] text-white'
         }`}
-        aria-disabled={isSoldOut}
+        aria-disabled={ctaDisabled}
       >
-        {isSoldOut ? 'Vé ngừng bán online' : 'Mua vé ngay'}
+        {ctaLabel}
       </Button>
     </div>
   )

@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToOne, OneToOne } from 'typeorm';
+import { Entity, Column, Index, ManyToOne, OneToOne } from 'typeorm';
 import { AbstractEntity } from '../../common/entities/abstract.entity';
 import { User } from '../../users/entities/user.entity';
 import { Event } from '../../event/entities/event.entity';
@@ -30,9 +30,11 @@ export class Booking extends AbstractEntity {
   @Column({ type: 'enum', enum: BookingStatus, default: BookingStatus.PENDING })
   status: BookingStatus;
 
+  @Index()
   @ManyToOne(() => User, (user) => user.bookings)
   user: User;
 
+  @Index()
   @ManyToOne(() => Event, (event) => event.bookings)
   event: Event;
 

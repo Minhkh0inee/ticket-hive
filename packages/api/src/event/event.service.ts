@@ -2,7 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateEventDto } from './dto/create-event.dto';
-import { Event } from './entities/event.entity';
+import { Event, EventStatus } from './entities/event.entity';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { IPaginatedResult } from 'src/common/interface/pagination.interface';
@@ -188,12 +188,7 @@ export class EventService {
 
     await Promise.all([
       this.elasticService.updateEvent(saved),
-      this.redisService.set(
-        RedisKeys.event.item(id),
-        JSON.stringify(saved),
-        RedisTTL.event.item,
-      ),
-      this.invalidateListCaches(),
+      this.invalidateEventCache(id),
     ]);
 
     return saved;
@@ -201,12 +196,12 @@ export class EventService {
 
   async remove(id: string): Promise<void> {
     const event = await this.findEventById(id);
+    await this.eventRepo.update(id, { status: EventStatus.CANCELLED });
     await this.eventRepo.softRemove(event);
 
     await Promise.all([
       this.elasticService.deleteEvent(id),
-      this.redisService.del(RedisKeys.event.item(id)),
-      this.invalidateListCaches(),
+      this.invalidateEventCache(id),
     ]);
   }
 
@@ -271,11 +266,23 @@ export class EventService {
     );
   }
 
+  private async invalidateEventCache(eventId?: string) {
+    try {
+      await Promise.all([
+        ...(eventId
+          ? [this.redisService.del(RedisKeys.event.item(eventId))]
+          : []),
+        this.redisService.clearByPattern(RedisKeys.event.patterns.allList),
+        this.redisService.clearByPattern(RedisKeys.event.patterns.allTag),
+        this.redisService.del(RedisKeys.event.homepage),
+      ]);
+    } catch (error) {
+      this.logger.warn(
+        `Cache invalidation failed${eventId ? ` for event ${eventId}` : ''}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
   private async invalidateListCaches() {
-    await Promise.all([
-      this.redisService.clearByPattern(RedisKeys.event.patterns.allList),
-      this.redisService.clearByPattern(RedisKeys.event.patterns.allTag),
-      this.redisService.del(RedisKeys.event.homepage),
-    ]);
+    await this.invalidateEventCache();
   }
 }

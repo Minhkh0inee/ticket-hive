@@ -15,6 +15,7 @@ import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { PaymentWebhookGuard } from 'src/common/guards/payment.guard';
 import { WebhookPayosBody } from './dto/webhook.dto';
+import { Throttle } from '@nestjs/throttler';
 
 interface WebhookRequest extends Request {
   webhookData: { success: boolean; data: WebhookPayosBody };
@@ -43,13 +44,11 @@ export class PaymentsController {
     return this.paymentsService.cancelPayment(orderCode, reason);
   }
 
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   @UseGuards(PaymentWebhookGuard)
   @Post('webhook')
-  handleWebhook(@Req() req: WebhookRequest) {
-    this.paymentsService
-      .handlePaymentWebhook(req.webhookData)
-      .catch((err) => console.error('Webhook handler error:', err));
-
+  async handleWebhook(@Req() req: WebhookRequest) {
+    await this.paymentsService.handlePaymentWebhook(req.webhookData);
     return { success: true };
   }
 
