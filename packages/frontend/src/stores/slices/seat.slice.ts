@@ -105,6 +105,16 @@ const seatsSlice = createSlice({
       state.selectedSeats = [];
       state.error = null;
     },
+    sseUpdateSeats(
+      state,
+      action: PayloadAction<{ seatIds: string[]; status: string }>,
+    ) {
+      state.seats = state.seats.map((seat) =>
+        action.payload.seatIds.includes(seat.id)
+          ? { ...seat, status: action.payload.status as Seat['status'] }
+          : seat,
+      );
+    },
     clearSeats(state) {
       state.selectedSeats = [];
       state.seats = [];
@@ -130,6 +140,7 @@ export const {
   resetLockSuccess,
   unlockSeatFailed,
   unlockSeatRequest,
-  unlockSeatSuccess
+  unlockSeatSuccess,
+  sseUpdateSeats,
 } = seatsSlice.actions;
 export default seatsSlice.reducer;

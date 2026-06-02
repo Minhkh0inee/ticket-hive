@@ -1,6 +1,6 @@
 import { call, put, takeLatest } from "redux-saga/effects"
 import { toast } from "sonner"
-import { fetchSeatsFailed, fetchSeatsRequest, fetchSeatsSuccess, lockSeatFailed, lockSeatRequest, lockSeatSuccess, unlockSeatRequest } from "../slices/seat.slice"
+import { fetchSeatsFailed, fetchSeatsRequest, fetchSeatsSuccess, lockSeatFailed, lockSeatRequest, lockSeatSuccess, unlockSeatFailed, unlockSeatRequest, unlockSeatSuccess } from "../slices/seat.slice"
 import axiosInstance from "@/lib/axios"
 import type { AxiosResponse } from "axios"
 
@@ -37,7 +37,7 @@ function* seatLockWorker(action: ReturnType<typeof lockSeatRequest>) {
     yield call(
       () => Promise.allSettled(
         seatIds.map(seatId =>
-          axiosInstance.delete(`/seats/${seatId}/lock`, { data: { eventId } })
+          axiosInstance.post(`/seats/${seatId}/unlock`, { eventId })
         )
       )
     )
@@ -47,7 +47,7 @@ function* seatLockWorker(action: ReturnType<typeof lockSeatRequest>) {
   }
 }
 
-function* seatUnlockWorker(action: ReturnType<typeof lockSeatRequest>) {
+function* seatUnlockWorker(action: ReturnType<typeof unlockSeatRequest>) {
   try {
     const { seatIds, eventId } = action.payload
 
@@ -59,20 +59,12 @@ function* seatUnlockWorker(action: ReturnType<typeof lockSeatRequest>) {
       )
     )
 
-    yield put(lockSeatSuccess(seatIds))
+    yield put(unlockSeatSuccess(seatIds))
     yield put(fetchSeatsRequest(eventId))
     toast.success('Đã hủy chọn ghế.')
   } catch (err) {
-    const { seatIds, eventId } = action.payload
-    yield call(
-      () => Promise.allSettled(
-        seatIds.map(seatId =>
-          axiosInstance.delete(`/seats/${seatId}/lock`, { data: { eventId } })
-        )
-      )
-    )
     const error = err as { response?: { data?: { message?: string } } }
-    yield put(lockSeatFailed(error.response?.data?.message ?? 'Failed to lock seats'))
+    yield put(unlockSeatFailed(error.response?.data?.message ?? 'Failed to unlock seats'))
     toast.error(error.response?.data?.message ?? 'Không thể hủy ghế. Vui lòng thử lại.')
   }
 }

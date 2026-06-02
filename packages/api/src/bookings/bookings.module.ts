@@ -9,6 +9,7 @@ import { EventModule } from 'src/event/event.module';
 import { Seat } from 'src/seats/entities/seats.entity';
 import { Event } from 'src/event/entities/event.entity';
 import { PaymentsModule } from 'src/payments/payments.module';
+import { SeatsModule } from 'src/seats/seats.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { PaymentsModule } from 'src/payments/payments.module';
     RedisModule,
     EventModule,
     PaymentsModule,
+    SeatsModule,
   ],
   controllers: [BookingsController],
   providers: [BookingsService, RedisService],

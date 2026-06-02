@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  MessageEvent,
   Param,
   ParseUUIDPipe,
   Post,
+  Sse,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
@@ -11,6 +13,7 @@ import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { User } from 'src/users/entities/user.entity';
 import { SeatsService } from './seats.service';
 import { SeatEventDto } from './dto/seat.dto';
+import { Observable } from 'rxjs';
 
 @Controller('seats')
 export class SeatsController {
@@ -34,5 +37,10 @@ export class SeatsController {
     @Body() seatDto: SeatEventDto,
   ) {
     return this.seatsService.seatUnlock(seatId, seatDto, user.id);
+  }
+
+  @Sse(':eventId/stream')
+  seatUpdates(@Param('eventId') eventId: string): Observable<MessageEvent> {
+    return this.seatsService.getSeatUpdateStream(eventId);
   }
 }

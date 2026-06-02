@@ -20,6 +20,7 @@ import { Payment, PaymentStatus } from 'src/payments/payment.entity';
 import { RedisKeys } from 'src/common/constant/redis-key.constant';
 import { generateOrderCode } from 'src/utils/order-code';
 import { ConfigService } from '@nestjs/config';
+import { SeatsService } from 'src/seats/seats.service';
 
 @Injectable()
 export class BookingsService {
@@ -34,6 +35,7 @@ export class BookingsService {
     @InjectRepository(Booking)
     private readonly bookingRepo: Repository<Booking>,
     private readonly paymentsService: PaymentsService,
+    private readonly seatsService: SeatsService,
   ) {}
 
   async createBooking(dto: CreateBookingDto, userId: string) {
@@ -48,6 +50,7 @@ export class BookingsService {
       userId,
       totalPrice,
     );
+    this.seatsService.emitSeatUpdate(dto.eventId, dto.seatIds, SeatStatus.BOOKED);
 
     await this.unlockSeats(dto.eventId, dto.seatIds, userId);
 
@@ -265,6 +268,7 @@ export class BookingsService {
         dto.seatIds.length,
       );
     });
+    this.seatsService.emitSeatUpdate(dto.eventId, dto.seatIds, SeatStatus.AVAILABLE);
   }
 
   private async unlockSeats(

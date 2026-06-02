@@ -10,7 +10,7 @@ import { SeatChips } from './SeatChip'
 import { SECTION_CONFIG } from './constants'
 import { useAppDispatch } from '@/hooks/useAppDispatch'
 import { useAppSelector } from '@/hooks/useAppSelector'
-import { lockSeatRequest, clearSelection } from '@/stores/slices/seat.slice'
+import { lockSeatRequest, clearSelection, sseUpdateSeats } from '@/stores/slices/seat.slice'
 import { AuthRequiredDialog } from '@/components/common/AuthRequiredDialog'
 import { SeatCancelDialog } from './SeatCancelDialog'
 
@@ -79,6 +79,16 @@ export function SeatMapDialog({
       navigate('/checkout')
     }
   }, [isLoading, error, navigate])
+
+  useEffect(() => {
+    const apiBase = import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
+    const es = new EventSource(`${apiBase}/seats/${eventId}/stream`)
+    es.onmessage = (e: MessageEvent) => {
+      const update = JSON.parse(e.data as string) as { seatIds: string[]; status: string }
+      dispatch(sseUpdateSeats(update))
+    }
+    return () => es.close()
+  }, [eventId, dispatch])
   
   return (
     <>
