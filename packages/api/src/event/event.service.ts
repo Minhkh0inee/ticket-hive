@@ -278,7 +278,7 @@ export class EventService {
       ]);
     } catch (error) {
       this.logger.warn(
-        `Cache invalidation failed${eventId ? ` for event ${eventId}` : ''}: ${error.message}`,
+        `Cache invalidation failed${eventId ? ` for event ${eventId}` : ''}: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }

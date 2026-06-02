@@ -50,7 +50,11 @@ export class BookingsService {
       userId,
       totalPrice,
     );
-    this.seatsService.emitSeatUpdate(dto.eventId, dto.seatIds, SeatStatus.BOOKED);
+    this.seatsService.emitSeatUpdate(
+      dto.eventId,
+      dto.seatIds,
+      SeatStatus.BOOKED,
+    );
 
     await this.unlockSeats(dto.eventId, dto.seatIds, userId);
 
@@ -198,7 +202,7 @@ export class BookingsService {
     totalPrice: number,
   ) {
     const MAX_RETRIES = 3;
-    const frontendUrl = this.configService.get(
+    const frontendUrl = this.configService.get<string>(
       'FRONTEND_URL',
       'http://localhost:5173',
     );
@@ -232,7 +236,8 @@ export class BookingsService {
         this.logger.log(`Payment link created for booking ${booking.id}`);
         return paymentResult.data?.checkoutUrl;
       } catch (error) {
-        const isUniqueViolation = error?.code === '23505';
+        const isUniqueViolation =
+          (error as { code?: string })?.code === '23505';
         if (isUniqueViolation && attempt < MAX_RETRIES - 1) {
           this.logger.warn(
             `orderCode collision, retrying... attempt ${attempt + 1}`,
@@ -268,7 +273,11 @@ export class BookingsService {
         dto.seatIds.length,
       );
     });
-    this.seatsService.emitSeatUpdate(dto.eventId, dto.seatIds, SeatStatus.AVAILABLE);
+    this.seatsService.emitSeatUpdate(
+      dto.eventId,
+      dto.seatIds,
+      SeatStatus.AVAILABLE,
+    );
   }
 
   private async unlockSeats(

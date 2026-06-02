@@ -13,7 +13,11 @@ import { SeatStatus } from './entities/seats.entity';
 @Injectable()
 export class SeatsService {
   private readonly seatLockTtl: number;
-  private seatUpdates$ = new Subject<{ eventId: string; seatIds: string[]; status: SeatStatus }>();
+  private seatUpdates$ = new Subject<{
+    eventId: string;
+    seatIds: string[];
+    status: SeatStatus;
+  }>();
   constructor(
     private readonly redisService: RedisService,
     private readonly configService: ConfigService,
@@ -51,8 +55,8 @@ export class SeatsService {
 
   getSeatUpdateStream(eventId: string): Observable<MessageEvent> {
     return this.seatUpdates$.pipe(
-      filter(update => update.eventId === eventId),
-      map(update => ({ data: update })),
+      filter((update) => update.eventId === eventId),
+      map((update) => ({ data: update })),
     );
   }
 
