@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { User, Ticket, LogOut } from 'lucide-react'
+import { User, Ticket, LogOut, LayoutDashboard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { SearchBar } from '@/components/layout/SearchBar'
@@ -100,6 +100,12 @@ export function Header() {
                     Profile
                   </Link>
                 </DropdownMenuItem>
+                {    user.role === 'admin' &&  <DropdownMenuItem asChild>
+                  <Link to="/admin" className="flex items-center gap-2 cursor-pointer">
+                    <LayoutDashboard className="w-4 h-4" />
+                    Admin Dashboard
+                  </Link>
+                </DropdownMenuItem>}
                 <DropdownMenuItem asChild>
                   <Link to="/my-tickets" className="flex items-center gap-2 cursor-pointer">
                     <Ticket className="w-4 h-4" />

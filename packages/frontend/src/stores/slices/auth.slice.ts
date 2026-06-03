@@ -10,6 +10,7 @@ interface User {
   email: string
   firstName: string
   lastName: string
+  role?: string
 }
 
 interface AuthState {
@@ -18,6 +19,7 @@ interface AuthState {
     email: string;
     firstName: string;
     lastName: string;
+    role?: string;
   };
   accessToken: null | string;
   refreshToken: null | string;

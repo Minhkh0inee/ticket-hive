@@ -122,3 +122,20 @@ export interface Category {
   label: string
   icon: string
 }
+
+export interface CreateEventDto {
+  title: string
+  description: string
+  eventDate: string
+  venue: string
+  city: string
+  basePrice: number
+  totalSeats: number
+  tag?: string
+  categoryId: string
+  imageUrl?: string
+}
+
+export interface UpdateEventDto extends Partial<CreateEventDto> {
+  status?: EventStatus
+}

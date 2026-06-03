@@ -1,8 +1,11 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { lazy, Suspense } from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from '@/components/ui/sonner'
 import { ScrollToTop } from '@/components/common/ScrollToTop'
 import { SessionExpiredDialog } from '@/components/common/SessionExpiredDialog'
 import { MainLayout } from '@/components/layout/MainLayout'
+import { AdminGuard } from '@/components/admin/AdminGuard'
+import { AdminLayout } from '@/components/admin/AdminLayout'
 import { HomePage } from '@/pages/HomePage'
 import { EventsPage } from '@/pages/EventsPage'
 import { EventDetailPage } from '@/pages/EventDetailPage'
@@ -14,6 +17,18 @@ import { PaymentSuccessPage } from '@/pages/PaymentSuccessPage'
 import { PaymentCancelPage } from '@/pages/PaymentCancelPage'
 import { ProfilePage } from '@/pages/ProfilePage'
 import { MyTicketsPage } from '@/pages/MyTicketsPage'
+
+const AdminEventsPage = lazy(() =>
+  import('@/pages/AdminEventsPage').then((m) => ({ default: m.AdminEventsPage })),
+)
+
+function AdminSpinner() {
+  return (
+    <div className="min-h-screen bg-[oklch(0.13_0_0)] flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-[oklch(0.6_0.2_250)] border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
+}
 
 function App() {
   return (
@@ -36,6 +51,20 @@ function App() {
           <Route path="/events/:id" element={<EventDetailPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/my-tickets" element={<MyTicketsPage />} />
+        </Route>
+
+        <Route element={<AdminGuard />}>
+          <Route element={<AdminLayout />}>
+            <Route path="/admin" element={<Navigate to="/admin/events" replace />} />
+            <Route
+              path="/admin/events"
+              element={
+                <Suspense fallback={<AdminSpinner />}>
+                  <AdminEventsPage />
+                </Suspense>
+              }
+            />
+          </Route>
         </Route>
       </Routes>
     </BrowserRouter>

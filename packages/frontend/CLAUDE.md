@@ -7,9 +7,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 # Development
 npm run dev          # Start Vite dev server on port 5173 (or port 3000 via Docker)
-npm run build        # TypeScript compile + Vite production build
+npm run build        # Vite production build only — does NOT run tsc
 npm run lint         # Run ESLint
 npm run preview      # Preview production build locally
+npx tsc --noEmit     # Type-check without emitting (run this before shipping)
 ```
 
 From the monorepo root (`../../`):
@@ -26,7 +27,7 @@ This is the frontend package of **TicketHive**, a ticket booking platform. It's 
 
 **Stack:** React 19, Redux Toolkit + Redux Saga, Tailwind CSS v4, shadcn/ui, Vite 7, TypeScript 5
 
-**Additional libraries:** React Router DOM 7, React Hook Form + Zod, Axios, Sonner (toasts), Next Themes, Lucide React (icons), `@fontsource-variable/geist` (Geist variable font)
+**Additional libraries:** React Router DOM 7, React Hook Form + Zod, Axios, Sonner (toasts), Next Themes, Lucide React (icons), `tw-animate-css` (animation utilities), `@fontsource-variable/geist` (Geist variable font)
 
 **Path alias:** `@` maps to `./src` (configured in both `vite.config.ts` and `tsconfig.json`).
 
@@ -34,6 +35,8 @@ This is the frontend package of **TicketHive**, a ticket booking platform. It's 
 - `VITE_API_URL` — backend API base URL (default: `http://localhost:8080`)
 - `VITE_ENABLE_MSW` — enable Mock Service Worker for API mocking during development
 - `VITE_CLOUDINARY_CLOUD_NAME` — Cloudinary cloud name for image optimization via `optimizeImage()` in `src/utils/image.ts`
+
+**Deployment:** `vercel.json` contains a catch-all SPA rewrite (`/(.*) → /index.html`) so React Router handles all routes on Vercel.
 
 ### Directory Layout
 ```
@@ -77,8 +80,8 @@ src/
 | HomePage | `/` | public | MainLayout |
 | EventsPage | `/events` | public | MainLayout |
 | EventDetailPage | `/events/:id` | public | MainLayout |
-| ProfilePage | `/profile` | **protected** | MainLayout |
-| MyTicketsPage | `/my-tickets` | **protected** | MainLayout |
+| ProfilePage | `/profile` | intended protected | MainLayout |
+| MyTicketsPage | `/my-tickets` | intended protected | MainLayout |
 | LoginPage | `/login` | public | none |
 | RegisterPage | `/register` | public | none |
 | CheckoutPage | `/checkout` | public | none |
@@ -86,11 +89,15 @@ src/
 | PaymentSuccessPage | `/payment/success` | public | none |
 | PaymentCancelPage | `/payment/cancel` | public | none |
 
-Protected routes use `ProtectedRoute` component (`src/components/ProctectedRoute.tsx` — note the typo in the filename; keep it as-is). Checkout, confirmation, and payment pages do **not** use `MainLayout`.
+**Important:** `ProtectedRoute` (`src/components/ProctectedRoute.tsx` — intentional typo, keep as-is) accepts `children` and redirects unauthenticated users to `/login`. However, it is **not currently wired in `App.tsx`** — `/profile` and `/my-tickets` are rendered inside `<MainLayout>` without a `ProtectedRoute` wrapper, so they are effectively unprotected. Wrap them when adding auth enforcement.
+
+Checkout, confirmation, and payment pages do **not** use `MainLayout`.
 
 ### App Bootstrap
 
 `main.tsx` wraps the app with `GlobalErrorBoundary` (outside Redux) then `Provider`. On startup, it reads `accessToken` and `refreshToken` from `localStorage` and dispatches `setTokens` + `fetchProfileRequest` to rehydrate the auth session without a full login.
+
+`SessionExpiredDialog` is rendered globally in `App.tsx` (outside `MainLayout`). It listens to `auth.sessionExpired` and shows a modal prompting re-login.
 
 ### Redux Store Shape
 
@@ -145,11 +152,11 @@ Protected routes use `ProtectedRoute` component (`src/components/ProctectedRoute
 
 ### Key Sagas
 
-- **auth.saga** — login (POST /auth/login + GET /auth/profile), register (auto-logs-in by re-dispatching `loginRequest` on success), token refresh
+- **auth.saga** — login (POST /auth/login → GET /auth/profile); register makes TWO round-trips: POST /auth/register saves tokens then re-dispatches `loginRequest` which calls POST /auth/login + GET /auth/profile again — `registerSuccess` is never dispatched; token refresh (POST /auth/refresh)
 - **event.saga** — fetch events list (with filters), fetch event detail
 - **home.saga** — sequential featured/special/trending/newEvents (dedup via ignoreIds), then parallel category fetches
 - **seat.saga** (`seat.sage.ts`) — fetch seats, lock/unlock seats (Promise.all), toast on success/error
-- **booking.saga** — create booking, fetch my bookings, fetch booking detail
+- **booking.saga** — create booking, fetch my bookings, fetch booking detail; `createBookingSuccess` payload is `{ booking, paymentUrl }`
 - **category.saga** (`category.sage.ts`) — fetch categories list (GET /categories)
 
 ### Key Types (`types/event.types.ts`)
@@ -183,13 +190,7 @@ Protected routes use `ProtectedRoute` component (`src/components/ProctectedRoute
 
 Uses **Redux Toolkit** for slice/action definitions and **Redux Saga** for async side effects. Service functions in `services/` handle raw HTTP calls; sagas orchestrate async flows and dispatch actions. **Thunk middleware is disabled** (`getDefaultMiddleware({ thunk: false })`).
 
-### Backend Context
-
-The API runs on port 8080:
-- Seat availability with Redis locking (max 4 seats per user, 10-min reservation)
-- Booking flow via RabbitMQ + email confirmation
-- Elasticsearch-powered event search
-- PostgreSQL (Neon) for persistence
+Currently only `auth.service.ts` exists — other sagas call `axiosInstance` directly rather than going through a service layer.
 
 ## Conventions
 - Commit: conventional commits (feat/fix/chore/refactor/docs...)
@@ -220,11 +221,6 @@ The API runs on port 8080:
 - Class merging: `cn(...)` from `@/lib/utils` (clsx + tailwind-merge)
 - Image optimization: `optimizeImage(url, width?)` from `@/utils/image` — transforms any URL through Cloudinary (requires `VITE_CLOUDINARY_CLOUD_NAME`)
 
-## Current Status
-Phase 4 UI complete — all pages, Redux slices/sagas, and core components are implemented. Service layer is partially connected (`auth.service.ts` exists; other services call API directly via axios in sagas).
-
-**Implemented:** All 11 pages, 6 Redux slices + sagas (auth, event, home, seat, booking, category), seat selection flow, checkout with countdown, auth with token refresh, skeleton loading states, MSW mock data (categories), ProtectedRoute guard.
-
 ## Notes
 - Tailwind v4: do not use `@apply` with utility classes — syntax differs from v3
 - MSW is only enabled when `VITE_ENABLE_MSW=true` is set in `.env`
@@ -235,4 +231,4 @@ Phase 4 UI complete — all pages, Redux slices/sagas, and core components are i
 - Booking fee: 5% on subtotal + seat section price modifiers
 - Two saga files are intentionally misnamed with `.sage.ts` extension: `seat.sage.ts` and `category.sage.ts` — keep as-is to avoid import breakage
 - `ProtectedRoute` component file is named `ProctectedRoute.tsx` (typo) — keep as-is
-- `SessionExpiredDialog` is rendered globally in `App.tsx` (not inside `MainLayout`) — it listens to `auth.sessionExpired` and shows a modal prompting re-login
+- `vite build` does not run TypeScript — run `npx tsc --noEmit` separately to catch type errors before merging
