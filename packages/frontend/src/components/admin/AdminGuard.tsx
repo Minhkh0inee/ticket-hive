@@ -14,8 +14,14 @@ export function AdminGuard() {
   const user = useAppSelector((s) => s.auth.user)
   const profileLoading = useAppSelector((s) => s.auth.profileLoading)
 
+  // Resolving identity after page refresh
   if (accessToken && profileLoading && !user) {
     return <Spinner />
+  }
+
+  // Profile load finished but user is still null — token invalid or profile error
+  if (accessToken && !profileLoading && !user) {
+    return <Navigate to="/login" replace />
   }
 
   if (!accessToken) {

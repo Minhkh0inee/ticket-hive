@@ -6,6 +6,17 @@ export interface FetchAdminEventsParams {
   limit?: number
 }
 
+export interface FetchAdminBookingsParams {
+  offset?: number
+  limit?: number
+  status?: string
+}
+
+export interface FetchAdminUsersParams {
+  offset?: number
+  limit?: number
+}
+
 const adminService = {
   fetchEvents: (params?: FetchAdminEventsParams) =>
     axiosInstance.get('/events', { params }),
@@ -18,6 +29,12 @@ const adminService = {
 
   deleteEvent: (id: string) =>
     axiosInstance.delete(`/events/${id}`),
+
+  fetchBookings: (params?: FetchAdminBookingsParams) =>
+    axiosInstance.get('/bookings', { params }),
+
+  fetchUsers: (params?: FetchAdminUsersParams) =>
+    axiosInstance.get('/users', { params }),
 }
 
 export default adminService

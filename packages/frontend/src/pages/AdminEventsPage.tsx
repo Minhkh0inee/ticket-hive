@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Plus, Pencil, Trash2, Armchair } from 'lucide-react'
 import { useAppDispatch } from '@/hooks/useAppDispatch'
 import { useAppSelector } from '@/hooks/useAppSelector'
 import {
@@ -60,6 +61,7 @@ function TableSkeleton() {
 
 export function AdminEventsPage() {
   const dispatch = useAppDispatch()
+  const navigate = useNavigate()
   const { events, total, isLoading, error, selectedEvent, isSubmitting, submitError } =
     useAppSelector((s) => s.admin)
 
@@ -200,6 +202,13 @@ export function AdminEventsPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => navigate(`/admin/events/${event.id}/seats`)}
+                        className="p-1.5 rounded hover:bg-[oklch(0.22_0_0)] text-[oklch(0.55_0_0)] hover:text-white transition-colors"
+                        title="View Seats"
+                      >
+                        <Armchair className="w-3.5 h-3.5" />
+                      </button>
                       <button
                         onClick={() => handleEdit(event)}
                         className="p-1.5 rounded hover:bg-[oklch(0.22_0_0)] text-[oklch(0.55_0_0)] hover:text-white transition-colors"

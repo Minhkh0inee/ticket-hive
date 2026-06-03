@@ -6,6 +6,7 @@ import { SessionExpiredDialog } from '@/components/common/SessionExpiredDialog'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { AdminGuard } from '@/components/admin/AdminGuard'
 import { AdminLayout } from '@/components/admin/AdminLayout'
+import { ProtectedLayout } from '@/components/ProtectedLayout'
 import { HomePage } from '@/pages/HomePage'
 import { EventsPage } from '@/pages/EventsPage'
 import { EventDetailPage } from '@/pages/EventDetailPage'
@@ -20,6 +21,18 @@ import { MyTicketsPage } from '@/pages/MyTicketsPage'
 
 const AdminEventsPage = lazy(() =>
   import('@/pages/AdminEventsPage').then((m) => ({ default: m.AdminEventsPage })),
+)
+
+const AdminBookingsPage = lazy(() =>
+  import('@/pages/AdminBookingsPage').then((m) => ({ default: m.AdminBookingsPage })),
+)
+
+const AdminSeatsPage = lazy(() =>
+  import('@/pages/AdminSeatsPage').then((m) => ({ default: m.AdminSeatsPage })),
+)
+
+const AdminUsersPage = lazy(() =>
+  import('@/pages/AdminUsersPage').then((m) => ({ default: m.AdminUsersPage })),
 )
 
 function AdminSpinner() {
@@ -49,8 +62,10 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/events" element={<EventsPage />} />
           <Route path="/events/:id" element={<EventDetailPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/my-tickets" element={<MyTicketsPage />} />
+          <Route element={<ProtectedLayout />}>
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/my-tickets" element={<MyTicketsPage />} />
+          </Route>
         </Route>
 
         <Route element={<AdminGuard />}>
@@ -61,6 +76,30 @@ function App() {
               element={
                 <Suspense fallback={<AdminSpinner />}>
                   <AdminEventsPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/admin/bookings"
+              element={
+                <Suspense fallback={<AdminSpinner />}>
+                  <AdminBookingsPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/admin/events/:id/seats"
+              element={
+                <Suspense fallback={<AdminSpinner />}>
+                  <AdminSeatsPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/admin/users"
+              element={
+                <Suspense fallback={<AdminSpinner />}>
+                  <AdminUsersPage />
                 </Suspense>
               }
             />

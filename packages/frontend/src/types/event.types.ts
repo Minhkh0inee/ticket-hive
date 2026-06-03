@@ -139,3 +139,12 @@ export interface CreateEventDto {
 export interface UpdateEventDto extends Partial<CreateEventDto> {
   status?: EventStatus
 }
+
+export interface AdminUser {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+  role: string
+  createdAt: string
+}

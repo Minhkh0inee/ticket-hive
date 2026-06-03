@@ -1,4 +1,4 @@
-import { call, put, takeLatest } from 'redux-saga/effects'
+import { call, put, select, takeLatest } from 'redux-saga/effects'
 import { type AxiosResponse } from 'axios'
 import { toast } from 'sonner'
 import {
@@ -14,8 +14,15 @@ import {
   deleteEventRequest,
   deleteEventSuccess,
   deleteEventFailed,
+  fetchAdminBookingsRequest,
+  fetchAdminBookingsSuccess,
+  fetchAdminBookingsFailed,
+  fetchAdminUsersRequest,
+  fetchAdminUsersSuccess,
+  fetchAdminUsersFailed,
 } from '../slices/admin.slice'
-import adminService from '@/services/admin.service'
+import adminService, { type FetchAdminEventsParams } from '@/services/admin.service'
+import type { RootState } from '../rootReducer'
 
 function* fetchAdminEventsWorker(
   action: ReturnType<typeof fetchAdminEventsRequest>,
@@ -47,6 +54,8 @@ function* createEventWorker(
     )) as AxiosResponse
     yield put(createEventSuccess(response.data.data))
     toast.success('Event created successfully')
+    const params = (yield select((s: RootState) => s.admin.currentParams)) as FetchAdminEventsParams
+    yield put(fetchAdminEventsRequest(params))
   } catch (err) {
     const error = err as { response?: { data?: { message?: string } } }
     const msg = error.response?.data?.message ?? 'Failed to create event'
@@ -70,6 +79,8 @@ function* updateEventWorker(
     )) as AxiosResponse
     yield put(updateEventSuccess(response.data.data))
     toast.success('Event updated successfully')
+    const params = (yield select((s: RootState) => s.admin.currentParams)) as FetchAdminEventsParams
+    yield put(fetchAdminEventsRequest(params))
   } catch (err) {
     const error = err as { response?: { data?: { message?: string } } }
     const msg = error.response?.data?.message ?? 'Failed to update event'
@@ -85,6 +96,8 @@ function* deleteEventWorker(
     yield call(() => adminService.deleteEvent(action.payload))
     yield put(deleteEventSuccess(action.payload))
     toast.success('Event deleted')
+    const params = (yield select((s: RootState) => s.admin.currentParams)) as FetchAdminEventsParams
+    yield put(fetchAdminEventsRequest(params))
   } catch (err) {
     const error = err as { response?: { data?: { message?: string } } }
     const msg = error.response?.data?.message ?? 'Failed to delete event'
@@ -93,9 +106,45 @@ function* deleteEventWorker(
   }
 }
 
+function* fetchAdminBookingsWorker(
+  action: ReturnType<typeof fetchAdminBookingsRequest>,
+): Generator {
+  try {
+    const response = (yield call(
+      () => adminService.fetchBookings(action.payload),
+    )) as AxiosResponse
+    const { data, total } = response.data.data
+    yield put(fetchAdminBookingsSuccess({ data, total }))
+  } catch (err) {
+    const error = err as { response?: { data?: { message?: string } } }
+    yield put(
+      fetchAdminBookingsFailed(error.response?.data?.message ?? 'Failed to fetch bookings'),
+    )
+  }
+}
+
+function* fetchAdminUsersWorker(
+  action: ReturnType<typeof fetchAdminUsersRequest>,
+): Generator {
+  try {
+    const response = (yield call(
+      () => adminService.fetchUsers(action.payload),
+    )) as AxiosResponse
+    const { data, total } = response.data.data
+    yield put(fetchAdminUsersSuccess({ data, total }))
+  } catch (err) {
+    const error = err as { response?: { data?: { message?: string } } }
+    yield put(
+      fetchAdminUsersFailed(error.response?.data?.message ?? 'Failed to fetch users'),
+    )
+  }
+}
+
 export function* adminWatcher() {
   yield takeLatest(fetchAdminEventsRequest.type, fetchAdminEventsWorker)
   yield takeLatest(createEventRequest.type, createEventWorker)
   yield takeLatest(updateEventRequest.type, updateEventWorker)
   yield takeLatest(deleteEventRequest.type, deleteEventWorker)
+  yield takeLatest(fetchAdminBookingsRequest.type, fetchAdminBookingsWorker)
+  yield takeLatest(fetchAdminUsersRequest.type, fetchAdminUsersWorker)
 }
