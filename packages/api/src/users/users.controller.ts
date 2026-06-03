@@ -8,11 +8,16 @@ import {
   Delete,
   ParseUUIDPipe,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
+import { RolesGuard } from 'src/common/guards/role.guard';
+import { UserRole } from './entities/user.entity';
+import { Roles } from 'src/common/decorator/role.decorator';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Controller('users')
 export class UsersController {
@@ -24,10 +29,11 @@ export class UsersController {
     return await this.usersService.create(createUserDto);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @Get()
-  async findAll() {
-    return await this.usersService.findAll();
+  async findAll(@Query() paginationDto: PaginationDto) {
+    return await this.usersService.findAll(paginationDto);
   }
 
   @UseGuards(JwtAuthGuard)

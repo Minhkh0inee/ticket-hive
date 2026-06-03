@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom'
-import { LayoutGrid, Ticket, Users, ArrowLeft, LogOut } from 'lucide-react'
+import { LayoutGrid, Ticket, Users, CreditCard, ArrowLeft, LogOut } from 'lucide-react'
 import { useAppSelector } from '@/hooks/useAppSelector'
 import { useAppDispatch } from '@/hooks/useAppDispatch'
 import { logout } from '@/stores/slices/auth.slice'
@@ -64,6 +64,10 @@ export function AdminLayout() {
           <NavLink to="/admin/users" className={navLinkClass}>
             <Users className="w-4 h-4 flex-shrink-0" />
             Users
+          </NavLink>
+          <NavLink to="/admin/payments" className={navLinkClass}>
+            <CreditCard className="w-4 h-4 flex-shrink-0" />
+            Payments
           </NavLink>
         </nav>
 

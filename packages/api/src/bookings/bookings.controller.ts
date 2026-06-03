@@ -1,9 +1,12 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
-import { User } from 'src/users/entities/user.entity';
+import { User, UserRole } from 'src/users/entities/user.entity';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { RolesGuard } from 'src/common/guards/role.guard';
+import { Roles } from 'src/common/decorator/role.decorator';
 
 @Controller('bookings')
 export class BookingsController {
@@ -16,6 +19,15 @@ export class BookingsController {
     @CurrentUser() user: User,
   ) {
     return await this.bookingsService.createBooking(createBookingDto, user.id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @Get()
+  async getBookings(
+    @Query() paginationDto: PaginationDto
+  ) {
+    return await this.bookingsService.getBookings(paginationDto);
   }
 
   @UseGuards(JwtAuthGuard)

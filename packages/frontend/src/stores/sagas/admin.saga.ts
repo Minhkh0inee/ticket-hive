@@ -20,6 +20,12 @@ import {
   fetchAdminUsersRequest,
   fetchAdminUsersSuccess,
   fetchAdminUsersFailed,
+  fetchAdminPaymentsRequest,
+  fetchAdminPaymentsSuccess,
+  fetchAdminPaymentsFailed,
+  cancelPaymentRequest,
+  cancelPaymentSuccess,
+  cancelPaymentFailed,
 } from '../slices/admin.slice'
 import adminService, { type FetchAdminEventsParams } from '@/services/admin.service'
 import type { RootState } from '../rootReducer'
@@ -140,6 +146,38 @@ function* fetchAdminUsersWorker(
   }
 }
 
+function* fetchAdminPaymentsWorker(
+  action: ReturnType<typeof fetchAdminPaymentsRequest>,
+): Generator {
+  try {
+    const response = (yield call(
+      () => adminService.fetchPayments(action.payload),
+    )) as AxiosResponse
+    const { data, total } = response.data.data
+    yield put(fetchAdminPaymentsSuccess({ data, total }))
+  } catch (err) {
+    const error = err as { response?: { data?: { message?: string } } }
+    yield put(
+      fetchAdminPaymentsFailed(error.response?.data?.message ?? 'Failed to fetch payments'),
+    )
+  }
+}
+
+function* cancelPaymentWorker(
+  action: ReturnType<typeof cancelPaymentRequest>,
+): Generator {
+  try {
+    yield call(() => adminService.cancelPayment(action.payload))
+    yield put(cancelPaymentSuccess(action.payload))
+    toast.success('Payment cancelled')
+  } catch (err) {
+    const error = err as { response?: { data?: { message?: string } } }
+    const msg = error.response?.data?.message ?? 'Failed to cancel payment'
+    yield put(cancelPaymentFailed(msg))
+    toast.error(msg)
+  }
+}
+
 export function* adminWatcher() {
   yield takeLatest(fetchAdminEventsRequest.type, fetchAdminEventsWorker)
   yield takeLatest(createEventRequest.type, createEventWorker)
@@ -147,4 +185,6 @@ export function* adminWatcher() {
   yield takeLatest(deleteEventRequest.type, deleteEventWorker)
   yield takeLatest(fetchAdminBookingsRequest.type, fetchAdminBookingsWorker)
   yield takeLatest(fetchAdminUsersRequest.type, fetchAdminUsersWorker)
+  yield takeLatest(fetchAdminPaymentsRequest.type, fetchAdminPaymentsWorker)
+  yield takeLatest(cancelPaymentRequest.type, cancelPaymentWorker)
 }

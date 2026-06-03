@@ -17,6 +17,11 @@ export interface FetchAdminUsersParams {
   limit?: number
 }
 
+export interface FetchAdminPaymentsParams {
+  offset?: number
+  limit?: number
+}
+
 const adminService = {
   fetchEvents: (params?: FetchAdminEventsParams) =>
     axiosInstance.get('/events', { params }),
@@ -35,6 +40,12 @@ const adminService = {
 
   fetchUsers: (params?: FetchAdminUsersParams) =>
     axiosInstance.get('/users', { params }),
+
+  fetchPayments: (params?: FetchAdminPaymentsParams) =>
+    axiosInstance.get('/payments', { params }),
+
+  cancelPayment: (orderCode: number) =>
+    axiosInstance.delete(`/payments/${orderCode}`),
 }
 
 export default adminService

@@ -148,3 +148,29 @@ export interface AdminUser {
   role: string
   createdAt: string
 }
+
+export enum PaymentStatus {
+  PENDING = 'pending',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled',
+}
+
+export interface AdminPaymentBooking {
+  id: string
+  attendeeName: string
+  attendeeEmail: string
+  user: { id: string; firstName: string; lastName: string; email: string }
+  event: { id: string; title: string }
+}
+
+export interface AdminPayment {
+  id: string
+  orderCode: number
+  amount: string
+  status: PaymentStatus
+  paymentLinkId: string | null
+  checkoutUrl: string | null
+  createdAt: string
+  updatedAt: string
+  booking: AdminPaymentBooking
+}

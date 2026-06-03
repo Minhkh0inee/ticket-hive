@@ -14,6 +14,7 @@ import { Booking, BookingStatus } from '../bookings/entities/bookings.entity';
 import { Seat, SeatStatus } from '../seats/entities/seats.entity';
 import { Event } from '../event/entities/event.entity';
 import { ClientProxy } from '@nestjs/microservices';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 const errMsg = (e: unknown): string =>
   e instanceof Error ? e.message : String(e);
@@ -59,6 +60,25 @@ export class PaymentsService {
       throw new BadRequestException(
         `Failed to create payment link: ${errMsg(error)}`,
       );
+    }
+  }
+
+  async getPayments(dto: PaginationDto) {
+    const { limit = 10, offset = 0 } = dto
+
+    const [data, total] = await this.paymentRepo.findAndCount({
+      relations: ['booking', 'booking.user', 'booking.event'],
+      order: { createdAt: 'DESC' },
+      take: limit,
+      skip: offset,
+    })
+
+    return {
+      data,
+      total,
+      limit,
+      offset,
+      totalPages: Math.ceil(total / limit),
     }
   }
 

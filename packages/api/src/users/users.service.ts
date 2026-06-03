@@ -9,6 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { hashingPassword } from 'src/utils/bcrypt';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class UsersService {
@@ -31,8 +32,30 @@ export class UsersService {
     return await this.userRepo.save(user);
   }
 
-  async findAll(): Promise<User[]> {
-    return await this.userRepo.find();
+  async findAll(dto: PaginationDto) {
+    const { limit = 10, offset = 0 } = dto
+
+    const [data, total] = await this.userRepo.findAndCount({
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        createdAt: true,
+      },
+      order: { createdAt: 'DESC' },
+      take: limit,
+      skip: offset,
+    })
+
+    return {
+      data,
+      total,
+      limit,
+      offset,
+      totalPages: Math.ceil(total / limit),
+    }
   }
 
   async findOneById(id: string): Promise<User> {

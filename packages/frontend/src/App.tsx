@@ -35,6 +35,10 @@ const AdminUsersPage = lazy(() =>
   import('@/pages/AdminUsersPage').then((m) => ({ default: m.AdminUsersPage })),
 )
 
+const AdminPaymentsPage = lazy(() =>
+  import('@/pages/AdminPaymentsPage').then((m) => ({ default: m.AdminPaymentsPage })),
+)
+
 function AdminSpinner() {
   return (
     <div className="min-h-screen bg-[oklch(0.13_0_0)] flex items-center justify-center">
@@ -100,6 +104,14 @@ function App() {
               element={
                 <Suspense fallback={<AdminSpinner />}>
                   <AdminUsersPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/admin/payments"
+              element={
+                <Suspense fallback={<AdminSpinner />}>
+                  <AdminPaymentsPage />
                 </Suspense>
               }
             />

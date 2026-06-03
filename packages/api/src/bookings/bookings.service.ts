@@ -21,6 +21,7 @@ import { RedisKeys } from 'src/common/constant/redis-key.constant';
 import { generateOrderCode } from 'src/utils/order-code';
 import { ConfigService } from '@nestjs/config';
 import { SeatsService } from 'src/seats/seats.service';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class BookingsService {
@@ -72,6 +73,24 @@ export class BookingsService {
       throw new BadRequestException(
         `Failed to create payment link: ${message}`,
       );
+    }
+  }
+  async getBookings(dto: PaginationDto) {
+    const { limit = 10, offset = 0 } = dto
+
+    const [data, total] = await this.bookingRepo.findAndCount({
+      relations: ['user', 'event', 'payment'],
+      order: { createdAt: 'DESC' },
+      take: limit,
+      skip: offset,
+    })
+
+    return {
+      data,
+      total,
+      limit,
+      offset,
+      totalPages: Math.ceil(total / limit),
     }
   }
 

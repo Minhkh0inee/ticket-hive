@@ -1,9 +1,10 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
-import type { Event, CreateEventDto, UpdateEventDto, Booking, AdminUser } from '@/types/event.types'
+import type { Event, CreateEventDto, UpdateEventDto, Booking, AdminUser, AdminPayment } from '@/types/event.types'
 import type {
   FetchAdminEventsParams,
   FetchAdminBookingsParams,
   FetchAdminUsersParams,
+  FetchAdminPaymentsParams,
 } from '@/services/admin.service'
 
 interface AdminState {
@@ -28,6 +29,13 @@ interface AdminState {
   usersLoading: boolean
   usersError: string | null
   usersCurrentParams: FetchAdminUsersParams
+
+  payments: AdminPayment[]
+  paymentsTotal: number
+  paymentsLoading: boolean
+  paymentsError: string | null
+  paymentsCurrentParams: FetchAdminPaymentsParams
+  isCancellingPayment: boolean
 }
 
 const initialState: AdminState = {
@@ -52,6 +60,13 @@ const initialState: AdminState = {
   usersLoading: false,
   usersError: null,
   usersCurrentParams: { offset: 0, limit: 10 },
+
+  payments: [],
+  paymentsTotal: 0,
+  paymentsLoading: false,
+  paymentsError: null,
+  paymentsCurrentParams: { offset: 0, limit: 10 },
+  isCancellingPayment: false,
 }
 
 const adminSlice = createSlice({
@@ -165,6 +180,38 @@ const adminSlice = createSlice({
       state.usersLoading = false
       state.usersError = action.payload
     },
+
+    // Payments
+    fetchAdminPaymentsRequest(state, action: PayloadAction<FetchAdminPaymentsParams | undefined>) {
+      state.paymentsLoading = true
+      state.paymentsError = null
+      if (action.payload) {
+        state.paymentsCurrentParams = action.payload
+      }
+    },
+    fetchAdminPaymentsSuccess(state, action: PayloadAction<{ data: AdminPayment[]; total: number }>) {
+      state.paymentsLoading = false
+      state.payments = action.payload.data
+      state.paymentsTotal = action.payload.total
+    },
+    fetchAdminPaymentsFailed(state, action: PayloadAction<string>) {
+      state.paymentsLoading = false
+      state.paymentsError = action.payload
+    },
+    cancelPaymentRequest(state, _action: PayloadAction<number>) {
+      state.isCancellingPayment = true
+      void _action
+    },
+    cancelPaymentSuccess(state, action: PayloadAction<number>) {
+      state.isCancellingPayment = false
+      state.payments = state.payments.map((p) =>
+        p.orderCode === action.payload ? { ...p, status: 'cancelled' as AdminPayment['status'] } : p,
+      )
+    },
+    cancelPaymentFailed(state, action: PayloadAction<string>) {
+      state.isCancellingPayment = false
+      state.paymentsError = action.payload
+    },
   },
 })
 
@@ -190,6 +237,12 @@ export const {
   fetchAdminUsersRequest,
   fetchAdminUsersSuccess,
   fetchAdminUsersFailed,
+  fetchAdminPaymentsRequest,
+  fetchAdminPaymentsSuccess,
+  fetchAdminPaymentsFailed,
+  cancelPaymentRequest,
+  cancelPaymentSuccess,
+  cancelPaymentFailed,
 } = adminSlice.actions
 
 export default adminSlice.reducer
